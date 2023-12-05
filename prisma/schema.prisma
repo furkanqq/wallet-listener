@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")  
+}
+
+model depositAddresses{
+  id  String  @id @default(auto())  @map("_id") @db.ObjectId
+  chain String
+  ctAddr  String
+  ccy String
+  to  String
+  addr  String
+  selected  Boolean
+  owner String  @unique
+}
+
+model currencies{
+  id  String  @id @default(auto())  @map("_id") @db.ObjectId
+  canDep  Boolean
+  canInternal Boolean
+  canWd Boolean
+  ccy String
+  chain String @unique
+  depQuotaFixed String
+  depQuoteDailyLayer2 String
+  logoLink  String
+  mainNet Boolean
+  maxFee  String
+  maxFeeForCtAddr String
+  maxWd String
+  minDep  String
+  minDepArrivalConfirm  String
+  minFee  String
+  minFeeForCtAddr String
+  minWd String
+  minWdUnlockConfirm  String
+  name  String
+  needTag Boolean
+  usedDepQuotaFixed String
+  usedWdQuota String
+  wdQuota String
+  wdTickSz  String
+  active  Boolean @default(false)
+}
