@@ -2,10 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { getApiConfiguration } from './wallet.utils';
 import { PrismaService } from './prisma.service';
 import { DepositAddress } from './types/database';
-import { WithdrawBody } from './wallet.model';
+import { TransferBody, WithdrawBody } from './wallet.model';
 import { OkxDepositService } from 'okx-api-connect/services/depositService';
 import { OkxWithdrawalService } from 'okx-api-connect/services/withdrawalService';
-import { WithdrawalDestinationType } from 'okx-api-connect/types/enums';
+import { OkxMarketService } from 'okx-api-connect/services/marketService';
+import { OkxWalletService } from 'okx-api-connect/services/walletService';
+import {
+  AccountType,
+  InstrumentType,
+  WithdrawalDestinationType,
+} from 'okx-api-connect/types/enums';
+import { ApiResponse } from './types/apiTypes';
 
 @Injectable()
 export class WalletService extends PrismaService {
@@ -71,5 +78,72 @@ export class WalletService extends PrismaService {
     });
 
     return okxWithdraw;
+  }
+
+  // get user main balance
+  public async getMainBalance() {
+    const okxWallet = new OkxWalletService(getApiConfiguration());
+    const okxMarket = new OkxMarketService(getApiConfiguration());
+
+    // get balance and market tickers
+    const { balance, market } = await Promise.all([
+      okxWallet.getMainAccountBalance(),
+      okxMarket.getMarketTickers({ instType: InstrumentType.SPOT }),
+    ]).then(([balance, market]) => {
+      return { balance, market };
+    });
+
+    // errors
+    if (balance.code !== '0') return balance;
+    if (market.code !== '0') return market as ApiResponse<undefined>;
+
+    // calculating total balance
+    let totalBalance = 0;
+    balance.data.map((bal) => {
+      if (bal.ccy !== 'USDT') {
+        const usdtPrice = market.data.find(
+          (m) => m.instId === `${bal.ccy}-USDT`,
+        ).last;
+
+        totalBalance += Number(bal.availBal) * Number(usdtPrice);
+      } else {
+        totalBalance += Number(bal.availBal);
+      }
+    });
+
+    return {
+      status: balance.status,
+      code: balance.code,
+      message: balance.message,
+      data: {
+        totalEqual: totalBalance.toString(),
+        balanceList: balance.data,
+      },
+    };
+  }
+
+  // get user trading balance
+  public async getTradingBalance() {
+    const okx = new OkxWalletService(getApiConfiguration());
+
+    const balance = await okx.getTradingAccountBalance();
+
+    if (balance.code !== '0') return balance;
+
+    // extract data from array
+    return { ...balance, data: balance.data[0] };
+  }
+
+  // transfer
+  public async transfer(body: TransferBody) {
+    const okx = new OkxWalletService(getApiConfiguration());
+
+    return await okx.fundsTransfer({
+      ccy: body.ccy.toUpperCase(),
+      amt: body.amount,
+      from:
+        body.toAccount === 'main' ? AccountType.Trading : AccountType.Funding,
+      to: body.toAccount === 'main' ? AccountType.Funding : AccountType.Trading,
+    });
   }
 }

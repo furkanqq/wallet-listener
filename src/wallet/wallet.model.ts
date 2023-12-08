@@ -21,3 +21,17 @@ export class WithdrawBody {
   @IsNotEmpty()
   toAddress: string;
 }
+
+export class TransferBody {
+  @IsString()
+  @IsNotEmpty()
+  ccy: string;
+
+  @IsString()
+  @IsNotEmpty()
+  amount: string;
+
+  @IsString()
+  @IsNotEmpty()
+  toAccount: string;
+}

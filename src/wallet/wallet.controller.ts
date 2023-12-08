@@ -11,7 +11,7 @@ import { WalletService } from './wallet.service';
 import { Response } from 'express';
 import { ApiResponse } from './types/apiTypes';
 import { DepositAddress } from './types/database';
-import { WithdrawBody } from './wallet.model';
+import { TransferBody, WithdrawBody } from './wallet.model';
 import {
   GetDepositAddressResponse,
   PostWithdrawalResponse,
@@ -61,11 +61,40 @@ export class WalletController {
       .json(address as ApiResponse<DepositAddress>);
   }
 
+  @Get('main/balance')
+  async mainBalance(@Res() res: Response) {
+    const balance = await this.service.getMainBalance();
+    return res.status(balance.status).json(balance);
+  }
+
+  @Get('trading/balance')
+  async tradingBalance(@Res() res: Response) {
+    const balance = await this.service.getTradingBalance();
+    return res.status(balance.status).json(balance);
+  }
+
   @Post('withdraw')
   async withdraw(@Body() body: WithdrawBody, @Res() res: Response) {
     const withdraw: ApiResponse<PostWithdrawalResponse[] | undefined> =
       await this.service.withdraw(body);
 
     return res.status(withdraw.status).json(withdraw);
+  }
+
+  @Post('transfer')
+  async transfer(@Body() body: TransferBody, @Res() res: Response) {
+    console.log(body.toAccount);
+    if (body.toAccount === 'main' || body.toAccount === 'trading') {
+      const transfer: ApiResponse<any | undefined> =
+        await this.service.transfer(body);
+
+      return res.status(transfer.status).json(transfer);
+    } else {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        status: 400,
+        code: '0',
+        message: 'toAccount must be "main" or "trading"',
+      });
+    }
   }
 }
