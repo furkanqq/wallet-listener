@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { DepositAddress } from './types/okxResponse';
+import { DepositAddress } from './types/database';
 import { ApiResponse } from './types/apiTypes';
 
 @Injectable()

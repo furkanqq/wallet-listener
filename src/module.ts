@@ -1,10 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DepositModule } from './deposit/deposit.module';
-import { WithdrawModule } from './withdraw/withdraw.module';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), DepositModule, WithdrawModule],
+  imports: [ConfigModule.forRoot(), WalletModule],
   controllers: [],
   providers: [],
 })

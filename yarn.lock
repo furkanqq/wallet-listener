@@ -4008,6 +4008,11 @@ object-inspect@^1.9.0:
   resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.13.1.tgz#b96c6109324ccfef6b12216a956ca4dc2ff94bc2"
   integrity sha512-5qoj1RUiKOMsCCNLV1CBiPYE10sziTsnmNxkAI/rZhiD63CF7IqdFGC/XzjWjpSgLf0LxXX3bDFIh0E18f6UhQ==
 
+okx-api-connect@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/okx-api-connect/-/okx-api-connect-1.0.6.tgz#3c3c0e1faa36b619a3e70709becff434bb5fed70"
+  integrity sha512-Cjc2um4QqnbW/CReM2R68n3chgN2N2+d0jjD+hvttIs/EG5LpBLW4CiiB4OPfSxQ9sKZqaNDQnAnjx+pWsHBxA==
+
 on-finished@2.4.1:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/on-finished/-/on-finished-2.4.1.tgz#58c8c44116e54845ad57f14ab10b03533184ac3f"
