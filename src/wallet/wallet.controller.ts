@@ -3,90 +3,40 @@ import {
   Controller,
   Get,
   HttpStatus,
-  Param,
   Post,
+  Req,
   Res,
 } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { Response } from 'express';
-import { ApiResponse } from './types/apiTypes';
-import { DepositAddress } from './types/database';
-import { TransferBody, WithdrawBody } from './wallet.model';
-import {
-  GetDepositAddressResponse,
-  PostWithdrawalResponse,
-} from 'okx-api-connect/types/responses';
+import { ApiResponse, CustomRequest } from './types/apiTypes';
+import { TransferBody } from './wallet.model';
 
 @Controller('/api/wallet')
 export class WalletController {
   constructor(private readonly service: WalletService) {}
 
-  @Get('deposit-all/:ccy')
-  async getDepositAll(
-    @Param('ccy') ccy: string,
-    @Res() res: Response<ApiResponse<DepositAddress[]>>,
-  ) {
-    if (!ccy)
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        code: '0',
-        status: 400,
-        message: 'ccy is required and cannot be empty',
-      });
-
-    const address: ApiResponse<DepositAddress[] | GetDepositAddressResponse[]> =
-      await this.service.depositAll(ccy);
-
-    return res
-      .status(HttpStatus.OK)
-      .json(address as ApiResponse<DepositAddress[]>);
-  }
-
-  @Get('deposit-address-by-chain/:chain')
-  async getDepositChain(
-    @Param('chain') chain: string,
-    @Res()
-    res: Response<ApiResponse<DepositAddress | undefined>>,
-  ) {
-    if (!chain)
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        code: '0',
-        status: 400,
-        message: 'chain is required and cannot be empty',
-      });
-
-    const address = await this.service.depositChain(chain);
-
-    return res
-      .status(address.status)
-      .json(address as ApiResponse<DepositAddress>);
-  }
-
   @Get('main/balance')
-  async mainBalance(@Res() res: Response) {
-    const balance = await this.service.getMainBalance();
+  async mainBalance(@Req() req: CustomRequest, @Res() res: Response) {
+    const balance = await this.service.getMainBalance(req.apiConfiguration);
     return res.status(balance.status).json(balance);
   }
 
   @Get('trading/balance')
-  async tradingBalance(@Res() res: Response) {
-    const balance = await this.service.getTradingBalance();
+  async tradingBalance(@Req() req: CustomRequest, @Res() res: Response) {
+    const balance = await this.service.getTradingBalance(req.apiConfiguration);
     return res.status(balance.status).json(balance);
   }
 
-  @Post('withdraw')
-  async withdraw(@Body() body: WithdrawBody, @Res() res: Response) {
-    const withdraw: ApiResponse<PostWithdrawalResponse[] | undefined> =
-      await this.service.withdraw(body);
-
-    return res.status(withdraw.status).json(withdraw);
-  }
-
   @Post('transfer')
-  async transfer(@Body() body: TransferBody, @Res() res: Response) {
-    console.log(body.toAccount);
+  async transfer(
+    @Body() body: TransferBody,
+    @Req() req: CustomRequest,
+    @Res() res: Response,
+  ) {
     if (body.toAccount === 'main' || body.toAccount === 'trading') {
       const transfer: ApiResponse<any | undefined> =
-        await this.service.transfer(body);
+        await this.service.transfer(body, req.apiConfiguration);
 
       return res.status(transfer.status).json(transfer);
     } else {

@@ -32,8 +32,9 @@
     "crypto-js": "^4.2.0",
     "mapped-type": "nestjs/mapped-types",
     "mongoose": "^8.0.2",
-    "okx-api-connect": "^1.0.7",
+    "okx-api-connect": "^1.0.9",
     "prisma": "^5.6.0",
+    "redis": "^4.6.11",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },

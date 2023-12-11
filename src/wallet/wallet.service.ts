@@ -1,89 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { getApiConfiguration } from './wallet.utils';
 import { PrismaService } from './prisma.service';
-import { DepositAddress } from './types/database';
-import { TransferBody, WithdrawBody } from './wallet.model';
-import { OkxDepositService } from 'okx-api-connect/services/depositService';
-import { OkxWithdrawalService } from 'okx-api-connect/services/withdrawalService';
+import { TransferBody } from './wallet.model';
 import { OkxMarketService } from 'okx-api-connect/services/marketService';
 import { OkxWalletService } from 'okx-api-connect/services/walletService';
-import {
-  AccountType,
-  InstrumentType,
-  WithdrawalDestinationType,
-} from 'okx-api-connect/types/enums';
-import { ApiResponse } from './types/apiTypes';
+import { AccountType, InstrumentType } from 'okx-api-connect/types/enums';
+import { ApiConfiguration, ApiResponse } from './types/apiTypes';
 
 @Injectable()
 export class WalletService extends PrismaService {
-  // get all deposit addresses fro given currency
-  public async depositAll(ccy: string) {
-    const okx = new OkxDepositService(getApiConfiguration());
-
-    const addresses = await okx.getDepositAddress({ ccy });
-
-    if (addresses.code !== '0') return addresses;
-
-    const filteredAddresses = addresses.data.filter(
-      (address) => address.selected,
-    );
-
-    return await this.updateDepositAddresses(
-      filteredAddresses as DepositAddress[],
-    );
-  }
-
-  // get deposit address by chain
-  public async depositChain(chain: string) {
-    const okx = new OkxDepositService(getApiConfiguration());
-
-    // get deposit address from db
-    const address = await this.getDepositAddressByChain(chain);
-
-    if (address.status !== 200)
-      return {
-        status: 400,
-        code: '0',
-        message: 'Deposit address not found',
-      };
-
-    const okxAddress = await okx.getDepositAddress({ ccy: address.data.ccy });
-
-    if (okxAddress.code !== '0') return okxAddress;
-
-    // select users address from selected chain
-    const selectedAddress = okxAddress.data.find(
-      (address) => address.chain === chain,
-    );
-
-    return {
-      status: 200,
-      code: '0',
-      message: 'Success',
-      data: selectedAddress,
-    };
-  }
-
-  // make withdraw
-  public async withdraw(body: WithdrawBody) {
-    const okx = new OkxWithdrawalService(getApiConfiguration());
-
-    const okxWithdraw = await okx.postWithdrawal({
-      amt: body.amount,
-      fee: body.fee,
-      dest: WithdrawalDestinationType.on_chain,
-      ccy: body.ccy,
-      chain: body.chain,
-      toAddr: body.toAddress,
-    });
-
-    return okxWithdraw;
-  }
-
   // get user main balance
-  public async getMainBalance() {
-    const okxWallet = new OkxWalletService(getApiConfiguration());
-    const okxMarket = new OkxMarketService(getApiConfiguration());
+  public async getMainBalance(apiConfiguration: ApiConfiguration) {
+    const okxWallet = new OkxWalletService(apiConfiguration);
+    const okxMarket = new OkxMarketService(apiConfiguration);
 
     // get balance and market tickers
     const { balance, market } = await Promise.all([
@@ -123,8 +51,8 @@ export class WalletService extends PrismaService {
   }
 
   // get user trading balance
-  public async getTradingBalance() {
-    const okx = new OkxWalletService(getApiConfiguration());
+  public async getTradingBalance(apiConfiguration: ApiConfiguration) {
+    const okx = new OkxWalletService(apiConfiguration);
 
     const balance = await okx.getTradingAccountBalance();
 
@@ -135,8 +63,11 @@ export class WalletService extends PrismaService {
   }
 
   // transfer
-  public async transfer(body: TransferBody) {
-    const okx = new OkxWalletService(getApiConfiguration());
+  public async transfer(
+    body: TransferBody,
+    apiConfiguration: ApiConfiguration,
+  ) {
+    const okx = new OkxWalletService(apiConfiguration);
 
     return await okx.fundsTransfer({
       ccy: body.ccy.toUpperCase(),
