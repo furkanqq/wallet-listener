@@ -44,7 +44,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       .catch((e: Error) => {
         return {
           status: 500,
-          code: '0',
+          code: '100-1000',
           message: e.message,
         };
       });

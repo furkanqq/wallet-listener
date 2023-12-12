@@ -37,17 +37,6 @@ export class WithdrawService extends PrismaService {
 
     if (okxWithdraw.code !== '0') return okxWithdraw;
 
-    // const okxWithdraw = await okx.postWithdrawal({
-    //   amt: body.amount,
-    //   fee: body.fee,
-    //   dest: WithdrawalDestinationType.on_chain,
-    //   ccy: body.ccy,
-    //   chain: body.chain,
-    //   toAddr: body.toAddress,
-    // });
-
-    // return okxWithdraw;
-
     return await this.writeWithdrawDB(okxWithdraw.data, market.data, session);
   }
 }

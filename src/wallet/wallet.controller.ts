@@ -42,7 +42,7 @@ export class WalletController {
     } else {
       return res.status(HttpStatus.BAD_REQUEST).json({
         status: 400,
-        code: '0',
+        code: '100-1010',
         message: 'toAccount must be "main" or "trading"',
       });
     }

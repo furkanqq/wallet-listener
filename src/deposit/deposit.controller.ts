@@ -16,8 +16,8 @@ export class DepositController {
   ) {
     if (!ccy)
       return res.status(HttpStatus.BAD_REQUEST).json({
-        code: '0',
         status: 400,
+        code: '100-1010',
         message: 'ccy is required and cannot be empty',
       });
 
@@ -36,8 +36,8 @@ export class DepositController {
   ) {
     if (!chain)
       return res.status(HttpStatus.BAD_REQUEST).json({
-        code: '0',
         status: 400,
+        code: '100-1000',
         message: 'chain is required and cannot be empty',
       });
 
