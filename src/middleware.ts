@@ -11,7 +11,7 @@ export class AppMiddleware implements NestMiddleware {
     if (!req.headers.authorization)
       return res.status(401).json({
         status: '401',
-        code: '0',
+        code: '100-1020',
         message: 'Authorized require.',
       });
 
@@ -47,6 +47,7 @@ export class AppMiddleware implements NestMiddleware {
     if (!userApis)
       return res.status(401).json({
         status: '401',
+        code: '100-1020',
         message: 'Wrong user token',
       });
 
