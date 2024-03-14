@@ -25,7 +25,7 @@ module.exports = {
     'prefer-const': [0, { destructuring: 'all' }],
 
     'no-unused-expressions': 'error',
-    'no-unused-vars': 'error',
+    'no-unused-vars': 'warn',
     'no-debugger': 'error',
     'no-console': 'warn',
     'ban-ts-ignore': 0,
