@@ -1,51 +1,59 @@
-import { Controller, Get, HttpStatus, Param, Req, Res } from '@nestjs/common';
-import { Response } from 'express';
-import { ApiResponse, CustomRequest } from './types/apiTypes';
-import { GetDepositAddressResponse } from 'okx-api-connect/types/responses';
+import { Controller, Get, Param, Req, Res, UseGuards } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { CustomResponse } from 'src/utils/api/response';
 import { DepositService } from './deposit.service';
+import { AuthGuard } from 'src/utils/api/guard';
+import { AuthDecorator } from 'src/utils/api/decorator';
+import { RedisSession } from 'src/utils/abstract';
+import { DepositAddress } from './deposit.schema';
 
-@Controller('/api/deposit')
+@Controller('api/deposit')
 export class DepositController {
-  constructor(private readonly service: DepositService) {}
-
-  @Get('all/:ccy')
-  async getDepositAll(
-    @Param('ccy') ccy: string,
-    @Req() req: CustomRequest,
-    @Res() res: Response<ApiResponse<GetDepositAddressResponse[] | undefined>>,
-  ) {
-    if (!ccy)
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        status: 400,
-        code: '100-1010',
-        message: 'ccy is required and cannot be empty',
-      });
-
-    const address: ApiResponse<GetDepositAddressResponse[]> =
-      await this.service.depositAll(ccy, req.apiConfiguration);
-
-    return res.status(HttpStatus.OK).json(address);
+  private readonly response: CustomResponse;
+  constructor(private readonly depositService: DepositService) {
+    depositService._init();
+    this.response = new CustomResponse();
   }
 
-  @Get('chain/:chain')
-  async getDepositChain(
-    @Param('chain') chain: string,
-    @Req() req: CustomRequest,
-    @Res()
-    res: Response<ApiResponse<GetDepositAddressResponse | undefined>>,
-  ) {
-    if (!chain)
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        status: 400,
-        code: '100-1000',
-        message: 'chain is required and cannot be empty',
+  @UseGuards(AuthGuard)
+  @Get(':ccy')
+  async getDepositAddressByCcy(
+    @AuthDecorator() session: RedisSession,
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('ccy') ccy: string,
+  ): Promise<Response> {
+    return await this.depositService
+      .getDepositAddressByCcy(ccy, session.user, session.apiConfiguration)
+      .then((depositAddresses) => {
+        return this.response.successResponse<DepositAddress[]>(
+          res,
+          depositAddresses,
+        );
+      })
+      .catch((err) => {
+        return this.response.errorResponse(res, err);
       });
+  }
 
-    const address = await this.service.depositChain(
-      chain,
-      req.apiConfiguration,
-    );
-
-    return res.status(address.status).json(address);
+  @UseGuards(AuthGuard)
+  @Get('chain/:chain')
+  async getDepositAddressByChain(
+    @AuthDecorator() session: RedisSession,
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('chain') chain: string,
+  ): Promise<Response> {
+    return await this.depositService
+      .getDepositAddressByChain(chain, session.user, session.apiConfiguration)
+      .then((depositAddresses) => {
+        return this.response.successResponse<DepositAddress[]>(
+          res,
+          depositAddresses,
+        );
+      })
+      .catch((err) => {
+        return this.response.errorResponse(res, err);
+      });
   }
 }

@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
-export class TransferBody {
+export class TransferRequest {
   @IsString()
   @IsNotEmpty()
   ccy: string;
@@ -9,7 +9,7 @@ export class TransferBody {
   @IsNotEmpty()
   amount: string;
 
-  @IsString()
+  @IsBoolean()
   @IsNotEmpty()
-  toAccount: string;
+  toTrade: boolean;
 }

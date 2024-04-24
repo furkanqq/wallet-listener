@@ -2,49 +2,76 @@ import {
   Body,
   Controller,
   Get,
-  HttpStatus,
   Post,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { CustomResponse } from 'src/utils/api/response';
+import { AuthGuard } from 'src/utils/api/guard';
+import { AuthDecorator } from 'src/utils/api/decorator';
+import { RedisSession } from 'src/utils/abstract';
 import { WalletService } from './wallet.service';
-import { Response } from 'express';
-import { ApiResponse, CustomRequest } from './types/apiTypes';
-import { TransferBody } from './wallet.model';
+import { TransferRequest } from './wallet.model';
 
-@Controller('/api/wallet')
+@Controller('api/wallet')
 export class WalletController {
-  constructor(private readonly service: WalletService) {}
-
-  @Get('main/balance')
-  async mainBalance(@Req() req: CustomRequest, @Res() res: Response) {
-    const balance = await this.service.getMainBalance(req.apiConfiguration);
-    return res.status(balance.status).json(balance);
+  private readonly response: CustomResponse;
+  constructor(private readonly walletService: WalletService) {
+    walletService._init();
+    this.response = new CustomResponse();
   }
 
+  @UseGuards(AuthGuard)
   @Get('trading/balance')
-  async tradingBalance(@Req() req: CustomRequest, @Res() res: Response) {
-    const balance = await this.service.getTradingBalance(req.apiConfiguration);
-    return res.status(balance.status).json(balance);
+  async getTradingBalance(
+    @AuthDecorator() session: RedisSession,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<Response> {
+    return await this.walletService
+      .getTradingBalance(session.user, session.apiConfiguration)
+      .then((balance) => {
+        return this.response.successResponse(res, balance);
+      })
+      .catch((err) => {
+        return this.response.errorResponse(res, err);
+      });
   }
 
+  @UseGuards(AuthGuard)
+  @Get('main/balance')
+  async getMainBalance(
+    @AuthDecorator() session: RedisSession,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<Response> {
+    return await this.walletService
+      .getMainBalance(session.user, session.apiConfiguration)
+      .then((balance) => {
+        return this.response.successResponse(res, balance);
+      })
+      .catch((err) => {
+        return this.response.errorResponse(res, err);
+      });
+  }
+
+  @UseGuards(AuthGuard)
   @Post('transfer')
   async transfer(
-    @Body() body: TransferBody,
-    @Req() req: CustomRequest,
+    @AuthDecorator() session: RedisSession,
+    @Req() req: Request,
     @Res() res: Response,
-  ) {
-    if (body.toAccount === 'main' || body.toAccount === 'trading') {
-      const transfer: ApiResponse<any | undefined> =
-        await this.service.transfer(body, req.apiConfiguration);
-
-      return res.status(transfer.status).json(transfer);
-    } else {
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        status: 400,
-        code: '100-1010',
-        message: 'toAccount must be "main" or "trading"',
+    @Body() body: TransferRequest,
+  ): Promise<Response> {
+    return await this.walletService
+      .transfer(body, session.apiConfiguration)
+      .then((response) => {
+        return this.response.successResponse(res, response);
+      })
+      .catch((err) => {
+        return this.response.errorResponse(res, err);
       });
-    }
   }
 }

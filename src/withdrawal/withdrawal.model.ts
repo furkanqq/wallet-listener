@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class WithdrawBody {
+export class WithdrawRequest {
   @IsString()
   @IsNotEmpty()
-  amount: string;
+  amt: string;
 
   @IsString()
   @IsNotEmpty()
@@ -19,5 +19,5 @@ export class WithdrawBody {
 
   @IsString()
   @IsNotEmpty()
-  toAddress: string;
+  toAddr: string;
 }

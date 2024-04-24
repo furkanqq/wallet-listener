@@ -5,24 +5,25 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { WalletModule } from './wallet/wallet.module';
-import { AppMiddleware } from './middleware';
 import { DepositModule } from './deposit/deposit.module';
-import { WithdrawModule } from './withdraw/withdraw.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { WithdrawalModule } from './withdrawal/withdrawal.module';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    WalletModule,
+    MongooseModule.forRoot(process.env.MONGO_URI),
     DepositModule,
-    WithdrawModule,
+    WithdrawalModule,
+    WalletModule,
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(AppMiddleware).forRoutes({
+    consumer.apply().forRoutes({
       path: '*',
       method: RequestMethod.ALL,
     });

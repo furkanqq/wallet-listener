@@ -1,57 +1,94 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from './prisma.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { DepositAddress } from './deposit.schema';
+import { Model } from 'mongoose';
 import { OkxDepositService } from 'okx-api-connect/services/depositService';
-import { ApiConfiguration, ApiResponse } from './types/apiTypes';
+import {
+  ApiConfiguration,
+  AuthorizedUser,
+  CustomOkxResponse,
+} from 'src/utils/abstract';
 import { GetDepositAddressResponse } from 'okx-api-connect/types/responses';
+import { CustomError } from 'src/utils/api/error';
 
 @Injectable()
-export class DepositService extends PrismaService {
-  // get all deposit addresses fro given currency
-  public async depositAll(ccy: string, apiConfiguration: ApiConfiguration) {
-    const okx = new OkxDepositService(apiConfiguration);
+export class DepositService {
+  constructor(
+    @InjectModel(DepositAddress.name)
+    private depositModel: Model<DepositAddress>,
+  ) {
+    this.depositModel = depositModel;
+  }
+  _init(): void {}
 
-    const addresses = await okx.getDepositAddress({ ccy });
+  async getDepositAddressByCcy(
+    ccy: string,
+    authorizedUser: AuthorizedUser,
+    apiConfiguration: ApiConfiguration,
+  ): Promise<DepositAddress[]> {
+    this.addDepositAddresses(ccy, authorizedUser, apiConfiguration);
 
-    if (addresses.code !== '0') return addresses;
-
-    const filteredAddresses = addresses.data.filter(
-      (address) => address.selected,
-    );
-
-    return {
-      status: 200,
-      code: '0',
-      message: '',
-      data: filteredAddresses,
-    };
+    return await this.depositModel.find({
+      subAccount: authorizedUser.subAccount,
+      ccy: ccy,
+      selected: true,
+    });
   }
 
-  // get deposit address by chain
-  public async depositChain(
+  async getDepositAddressByChain(
     chain: string,
+    authorizedUser: AuthorizedUser,
     apiConfiguration: ApiConfiguration,
-  ): Promise<ApiResponse<GetDepositAddressResponse | undefined>> {
-    const okx = new OkxDepositService(apiConfiguration);
-
-    // get deposit address from db
-    const address = await this.getDepositAddressByChain(chain);
-
-    if (address.status !== 200) return address as ApiResponse<undefined>;
-
-    const okxAddress = await okx.getDepositAddress({ ccy: address.data.ccy });
-
-    if (okxAddress.code !== '0') return okxAddress as ApiResponse<undefined>;
-
-    // select users address from selected chain
-    const selectedAddress = okxAddress.data.find(
-      (address) => address.chain === chain,
+  ): Promise<DepositAddress[]> {
+    this.addDepositAddresses(
+      chain.split('-')[0],
+      authorizedUser,
+      apiConfiguration,
     );
 
-    return {
-      status: 200,
-      code: '0',
-      message: 'Success',
-      data: selectedAddress,
-    };
+    return await this.depositModel.find({
+      subAccount: authorizedUser.subAccount,
+      chain: chain,
+      selected: true,
+    });
+  }
+
+  private async addDepositAddresses(
+    ccy: string,
+    authorizedUser: AuthorizedUser,
+    apiConfiguration: ApiConfiguration,
+  ): Promise<void> {
+    const okxAddresses: GetDepositAddressResponse[] =
+      await new OkxDepositService(apiConfiguration)
+        .getDepositAddress({
+          ccy: ccy,
+        })
+        .then((response: CustomOkxResponse<GetDepositAddressResponse>) => {
+          if (response.status === 200) {
+            return response.data;
+          }
+          throw new CustomError(
+            response.message,
+            response.code,
+            response.status,
+          );
+        });
+
+    await Promise.all(
+      okxAddresses.map(async (address) => {
+        const depositAddress = await this.depositModel.findOne({
+          subAccount: authorizedUser.subAccount,
+          chain: address.chain,
+          addr: address.addr,
+        });
+        if (!depositAddress) {
+          await this.depositModel.create({
+            subAccount: authorizedUser.subAccount,
+            customerId: authorizedUser.id,
+            ...address,
+          });
+        }
+      }),
+    );
   }
 }
