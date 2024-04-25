@@ -7,8 +7,6 @@ export class AuthGuard implements CanActivate {
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest();
 
-    if (req.url.startsWith('/api/auth/')) return true;
-
     if (!req.headers.authorization) {
       throw ExceptionMessages.InvalidToken;
     }

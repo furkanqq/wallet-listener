@@ -2,6 +2,7 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 import { RedisService } from 'src/utils/redis';
 import { ExceptionMessages } from './exception';
+import { SessionType } from '../enum';
 
 export const AuthDecorator = createParamDecorator(
   async (data: unknown, ctx: ExecutionContext) => {
@@ -17,6 +18,9 @@ export const AuthDecorator = createParamDecorator(
     const redisSession = await redisService.getRedisSession(token);
 
     if (!redisSession) {
+      throw ExceptionMessages.InvalidCredentials;
+    }
+    if (redisSession.sessionType === SessionType.FORGOT) {
       throw ExceptionMessages.InvalidCredentials;
     }
 

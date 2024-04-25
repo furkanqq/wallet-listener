@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { createClient } from 'redis';
 import { DecodedJwt, RedisSession } from './abstract';
+import { SessionType } from './enum';
 
 @Injectable()
 export class RedisService {
@@ -39,6 +40,7 @@ export class RedisService {
             id: session.id,
             apiConfiguration: JSON.parse(session.apiConfiguration),
             user: JSON.parse(session.user),
+            sessionType: session.sessionType as SessionType,
           };
         }
       }
@@ -65,6 +67,8 @@ export class RedisService {
 
         const session = await client.hGetAll(`redis_session:${token}`);
         const redisSession: RedisSession = JSON.parse(JSON.stringify(session));
+
+        if (redisSession.sessionType === SessionType.FORGOT) return false;
 
         if (redisSession.id) return true;
       }

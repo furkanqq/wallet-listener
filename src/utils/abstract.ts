@@ -1,3 +1,5 @@
+import { SessionType } from './enum';
+
 export interface ApiConfiguration {
   secretKey: string;
   apiKey: string;
@@ -17,6 +19,7 @@ export interface RedisSession {
   id: string;
   apiConfiguration: ApiConfiguration;
   user: AuthorizedUser;
+  sessionType: SessionType;
 }
 
 export interface DecodedJwt {
