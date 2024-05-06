@@ -14,6 +14,8 @@ import { AuthDecorator } from 'src/utils/api/decorator';
 import { RedisSession } from 'src/utils/abstract';
 import { WalletService } from './wallet.service';
 import { TransferRequest } from './wallet.model';
+import { VerificationGuard } from 'src/utils/api/verification';
+import { MultiFactorType } from 'src/utils/enum';
 
 @Controller('api/wallet')
 export class WalletController {
@@ -24,6 +26,7 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard)
+  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Get('trading/balance')
   async getTradingBalance(
     @AuthDecorator() session: RedisSession,
@@ -41,6 +44,7 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard)
+  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Get('main/balance')
   async getMainBalance(
     @AuthDecorator() session: RedisSession,
@@ -58,6 +62,7 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard)
+  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Post('transfer')
   async transfer(
     @AuthDecorator() session: RedisSession,

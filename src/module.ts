@@ -9,6 +9,9 @@ import { DepositModule } from './deposit/deposit.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { WithdrawalModule } from './withdrawal/withdrawal.module';
 import { WalletModule } from './wallet/wallet.module';
+import { AuthGuard } from './utils/api/guard';
+import { VerificationGuard } from './utils/api/verification';
+import { MultiFactorType } from './utils/enum';
 
 @Module({
   imports: [
@@ -19,7 +22,13 @@ import { WalletModule } from './wallet/wallet.module';
     WalletModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    AuthGuard,
+    {
+      provide: VerificationGuard,
+      useValue: new VerificationGuard(MultiFactorType.AUTHENTICATE),
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

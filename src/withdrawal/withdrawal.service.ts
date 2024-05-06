@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { WithdrawalRequest } from './withdrawal.schema';
 import { Model } from 'mongoose';
-import {
-  ApiConfiguration,
-  AuthorizedUser,
-  CustomOkxResponse,
-} from 'src/utils/abstract';
+import { CustomOkxResponse, RedisSession } from 'src/utils/abstract';
 import { WithdrawRequest } from './withdrawal.model';
 import { OkxWithdrawalService } from 'okx-api-connect/services/withdrawalService';
 import { OkxMarketService } from 'okx-api-connect/services/marketService';
@@ -17,6 +13,8 @@ import {
   GetWithdrawalHistoryResponse,
 } from 'okx-api-connect/types/responses';
 import { CustomError } from 'src/utils/api/error';
+import { RedisService } from 'src/utils/redis';
+import { MultiFactorType } from 'src/utils/enum';
 
 @Injectable()
 export class WithdrawalService {
@@ -30,13 +28,14 @@ export class WithdrawalService {
 
   async withdraw(
     body: WithdrawRequest,
-    authorizedUser: AuthorizedUser,
-    apiConfiguration: ApiConfiguration,
+    redisSession: RedisSession,
   ): Promise<WithdrawRequest> {
     const request: PostWithdrawalRequest = {
       ...body,
       dest: WithdrawalDestinationType.on_chain,
     };
+
+    const { user, apiConfiguration } = redisSession;
 
     const withdrawalResponse: GetWithdrawalHistoryResponse[] =
       await new OkxWithdrawalService(apiConfiguration)
@@ -67,8 +66,8 @@ export class WithdrawalService {
 
     this.withdrawalModel.create({
       _id: withdrawalResponse[0].wdId,
-      subAccount: authorizedUser.subAccount,
-      customerId: authorizedUser.id,
+      subAccount: user.subAccount,
+      customerId: user.id,
       ccy: body.ccy,
       chain: body.chain,
       amt: body.amt,
@@ -78,6 +77,12 @@ export class WithdrawalService {
       dest: WithdrawalDestinationType.on_chain,
       usdtEqual: usdtEqual,
     });
+
+    const redisService = new RedisService();
+    await redisService.deleteMultiFactorSession(
+      redisSession.id,
+      MultiFactorType.WITHDRAWAL,
+    );
 
     return this.withdrawalModel.findOne({ wdId: withdrawalResponse[0].wdId });
   }

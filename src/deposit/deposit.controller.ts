@@ -6,6 +6,8 @@ import { AuthGuard } from 'src/utils/api/guard';
 import { AuthDecorator } from 'src/utils/api/decorator';
 import { RedisSession } from 'src/utils/abstract';
 import { DepositAddress } from './deposit.schema';
+import { MultiFactorType } from 'src/utils/enum';
+import { VerificationGuard } from 'src/utils/api/verification';
 
 @Controller('api/deposit')
 export class DepositController {
@@ -16,6 +18,7 @@ export class DepositController {
   }
 
   @UseGuards(AuthGuard)
+  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Get(':ccy')
   async getDepositAddressByCcy(
     @AuthDecorator() session: RedisSession,
@@ -37,6 +40,7 @@ export class DepositController {
   }
 
   @UseGuards(AuthGuard)
+  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Get('chain/:chain')
   async getDepositAddressByChain(
     @AuthDecorator() session: RedisSession,

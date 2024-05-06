@@ -1,4 +1,11 @@
-import { SessionType } from './enum';
+import {
+  AuthenticationType,
+  Country,
+  MultiFactorType,
+  MultiFactorValidationStatus,
+  SessionType,
+  VerificationType,
+} from './enum';
 
 export interface ApiConfiguration {
   secretKey: string;
@@ -8,11 +15,18 @@ export interface ApiConfiguration {
 
 export interface AuthorizedUser {
   id: number;
-  email?: string;
+  email: string;
   firstName?: string;
   lastName?: string;
   mobileNumber?: string;
-  subAccount?: string;
+  subAccount: string;
+  country?: Country;
+  authenticationType: AuthenticationType;
+  authenticatorSecretKey?: string;
+  antiPhishingCode?: string;
+  emailVerifyEnable: boolean;
+  smsVerifyEnable: boolean;
+  authenticatorVerifyEnable: boolean;
 }
 
 export interface RedisSession {
@@ -26,6 +40,37 @@ export interface DecodedJwt {
   email: string;
   iat: number;
   exp: number;
+}
+
+export interface MultiFactorInfo {
+  email: string;
+  emailValidation: MultiFactorValidationStatus;
+  emailCode?: string;
+  emailCodeExpiration: number;
+
+  mobileNumber: string;
+  smsValidation: MultiFactorValidationStatus;
+  smsCode?: string;
+  smsCodeExpiration: number;
+
+  authenticatorSecretKey: string;
+  authenticatorValidation: MultiFactorValidationStatus;
+
+  newVerificationType?: VerificationType;
+  newVerificationCode?: string;
+  newVerificationCodeExpiration?: number;
+  newVerificationValidation?: MultiFactorValidationStatus;
+  newVerificationParam?: string;
+
+  expireAt: number;
+
+  status: boolean;
+}
+
+export interface MultiFactorSession {
+  token: string;
+  multiFactorInfo: MultiFactorInfo;
+  multiFactorType: MultiFactorType;
 }
 
 export interface CustomOkxResponse<T> {
