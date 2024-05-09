@@ -8,6 +8,7 @@ import { WithdrawRequest } from './withdrawal.model';
 import { RedisSession } from 'src/utils/abstract';
 import { VerificationGuard } from 'src/utils/api/verification';
 import { MultiFactorType } from 'src/utils/enum';
+import { KycGuard } from 'src/utils/api/kyc';
 
 @Controller('api/withdrawal')
 export class WithdrawalController {
@@ -18,6 +19,7 @@ export class WithdrawalController {
   }
   @UseGuards(AuthGuard)
   @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
+  @UseGuards(KycGuard)
   @UseGuards(new VerificationGuard(MultiFactorType.WITHDRAWAL))
   @Post()
   async withdraw(

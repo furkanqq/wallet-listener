@@ -12,6 +12,7 @@ import { WalletModule } from './wallet/wallet.module';
 import { AuthGuard } from './utils/api/guard';
 import { VerificationGuard } from './utils/api/verification';
 import { MultiFactorType } from './utils/enum';
+import { KycGuard } from './utils/api/kyc';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MultiFactorType } from './utils/enum';
       provide: VerificationGuard,
       useValue: new VerificationGuard(MultiFactorType.AUTHENTICATE),
     },
+    KycGuard,
   ],
 })
 export class AppModule implements NestModule {

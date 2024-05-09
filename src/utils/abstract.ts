@@ -19,6 +19,7 @@ export interface AuthorizedUser {
   firstName?: string;
   lastName?: string;
   mobileNumber?: string;
+  dialingCode?: string;
   subAccount: string;
   country?: Country;
   authenticationType: AuthenticationType;
@@ -27,6 +28,7 @@ export interface AuthorizedUser {
   emailVerifyEnable: boolean;
   smsVerifyEnable: boolean;
   authenticatorVerifyEnable: boolean;
+  restrictionEndTime?: number;
 }
 
 export interface RedisSession {
@@ -49,6 +51,7 @@ export interface MultiFactorInfo {
   emailCodeExpiration: number;
 
   mobileNumber: string;
+  dialingCode: string;
   smsValidation: MultiFactorValidationStatus;
   smsCode?: string;
   smsCodeExpiration: number;
