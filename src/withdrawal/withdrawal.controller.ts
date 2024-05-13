@@ -17,10 +17,12 @@ export class WithdrawalController {
     withdrawalService._init();
     this.response = new CustomResponse();
   }
-  @UseGuards(AuthGuard)
-  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
-  @UseGuards(KycGuard)
-  @UseGuards(new VerificationGuard(MultiFactorType.WITHDRAWAL))
+  @UseGuards(
+    AuthGuard,
+    KycGuard,
+    new VerificationGuard(MultiFactorType.AUTHENTICATE),
+    new VerificationGuard(MultiFactorType.WITHDRAWAL),
+  )
   @Post()
   async withdraw(
     @AuthDecorator() session: RedisSession,

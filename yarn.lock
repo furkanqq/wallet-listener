@@ -748,11 +748,6 @@
     "@types/jsonwebtoken" "9.0.5"
     jsonwebtoken "9.0.2"
 
-"@nestjs/mapped-types@^2.0.4":
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/@nestjs/mapped-types/-/mapped-types-2.0.4.tgz#97280b06bf85d34ea9bad1e847e5e3cbaca8f04f"
-  integrity sha512-xl+gUSp0B+ln1VSNoUftlglk8dfpUes3DHGxKZ5knuBxS5g2H/8p9/DSBOYWUfO5f4u9s6ffBPZ71WO+tbe5SA==
-
 "@nestjs/mongoose@^10.0.2":
   version "10.0.2"
   resolved "https://registry.yarnpkg.com/@nestjs/mongoose/-/mongoose-10.0.2.tgz#33018e22f0ba03a37ffb30d8b3c6b7cf904894d8"
@@ -833,18 +828,6 @@
     open "^9.1.0"
     picocolors "^1.0.0"
     tslib "^2.6.0"
-
-"@prisma/client@^5.6.0":
-  version "5.6.0"
-  resolved "https://registry.yarnpkg.com/@prisma/client/-/client-5.6.0.tgz#1c15932250d5658fe0127e62faf4ecd96a877259"
-  integrity sha512-mUDefQFa1wWqk4+JhKPYq8BdVoFk9NFMBXUI8jAkBfQTtgx8WPx02U2HB/XbAz3GSUJpeJOKJQtNvaAIDs6sug==
-  dependencies:
-    "@prisma/engines-version" "5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
-
-"@prisma/engines-version@5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee":
-  version "5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
-  resolved "https://registry.yarnpkg.com/@prisma/engines-version/-/engines-version-5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee.tgz#57b003ab5e1ea1523b5cdd7f06b24ebcf5c7fd8c"
-  integrity sha512-UoFgbV1awGL/3wXuUK3GDaX2SolqczeeJ5b4FVec9tzeGbSWJboPSbT0psSrmgYAKiKnkOPFSLlH6+b+IyOwAw==
 
 "@redis/bloom@1.2.0":
   version "1.2.0"
@@ -971,11 +954,6 @@
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@types/cookiejar/-/cookiejar-2.1.5.tgz#14a3e83fa641beb169a2dd8422d91c3c345a9a78"
   integrity sha512-he+DHOWReW0nghN24E1WUqM0efK4kI9oTqDm6XmK8ZPe2djZ90BSNdGnIyCLzCPw7/pogPlGbzI2wHGGmi4O/Q==
-
-"@types/crypto-js@^4.2.1":
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/@types/crypto-js/-/crypto-js-4.2.1.tgz#480edd76991a63050cb88db1a8840758c55a7135"
-  integrity sha512-FSPGd9+OcSok3RsM0UZ/9fcvMOXJ1ENE/ZbLfOPlBWj7BgXtEAM8VYfTtT760GiLbQIMoVozwVuisjvsVwqYWw==
 
 "@types/eslint-scope@^3.7.3":
   version "3.7.7"
@@ -2088,11 +2066,6 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     path-key "^3.1.0"
     shebang-command "^2.0.0"
     which "^2.0.1"
-
-crypto-js@^4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-4.2.0.tgz#4d931639ecdfd12ff80e8186dba6af2c2e856631"
-  integrity sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==
 
 debug@2.6.9:
   version "2.6.9"
@@ -3875,10 +3848,6 @@ makeerror@1.0.12:
   dependencies:
     tmpl "1.0.5"
 
-mapped-type@nestjs/mapped-types:
-  version "2.0.4"
-  resolved "https://codeload.github.com/nestjs/mapped-types/tar.gz/d0d65fd5a028c5fd065c2383817b72174da6f277"
-
 media-typer@0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
@@ -4147,10 +4116,10 @@ object-inspect@^1.9.0:
   resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.13.1.tgz#b96c6109324ccfef6b12216a956ca4dc2ff94bc2"
   integrity sha512-5qoj1RUiKOMsCCNLV1CBiPYE10sziTsnmNxkAI/rZhiD63CF7IqdFGC/XzjWjpSgLf0LxXX3bDFIh0E18f6UhQ==
 
-okx-api-connect@^1.1.5:
-  version "1.1.5"
-  resolved "https://registry.yarnpkg.com/okx-api-connect/-/okx-api-connect-1.1.5.tgz#81a1d1905513259fb1e9f6e1a9cb2e6307bc8f4c"
-  integrity sha512-dylIAcwYwvsRK74WqWN0aEDnK5+x6RI9r3Wjy4LqVeMT68W/3aJxGYMut97l9gXIf9cHli8Ry+UUF1ZJsXuMPA==
+okx-api-connect@^1.1.7:
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/okx-api-connect/-/okx-api-connect-1.1.7.tgz#73789c6a889f942c21608200212b050e400e33fc"
+  integrity sha512-x5aRoXHBMjC3R1NWV+1XGpM/PfvSRc3lPXdDmlV1eaMMsdcD1EUsXxgKEYK9tQnhfdnjb2n8nxATUK57CZbVQQ==
 
 on-finished@2.4.1:
   version "2.4.1"

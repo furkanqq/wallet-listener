@@ -78,6 +78,15 @@ export class CustomExceptionsFilter implements ExceptionFilter {
         });
       }
 
+      case 'ForbiddenException':
+        return res.status(status).json({
+          timestamp: new Date().toISOString(),
+          status: status,
+          message: exception.message,
+          code: '100-1404',
+          data: null,
+        });
+
       default:
         return res.status(500).json({
           timestamp: new Date().toISOString(),

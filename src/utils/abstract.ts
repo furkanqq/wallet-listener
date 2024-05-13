@@ -28,7 +28,7 @@ export interface AuthorizedUser {
   emailVerifyEnable: boolean;
   smsVerifyEnable: boolean;
   authenticatorVerifyEnable: boolean;
-  restrictionEndTime?: number;
+  restrictionEndTime?: string;
 }
 
 export interface RedisSession {

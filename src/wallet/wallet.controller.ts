@@ -25,8 +25,7 @@ export class WalletController {
     this.response = new CustomResponse();
   }
 
-  @UseGuards(AuthGuard)
-  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
+  @UseGuards(AuthGuard, new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Get('trading/balance')
   async getTradingBalance(
     @AuthDecorator() session: RedisSession,
@@ -43,8 +42,7 @@ export class WalletController {
       });
   }
 
-  @UseGuards(AuthGuard)
-  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
+  @UseGuards(AuthGuard, new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Get('main/balance')
   async getMainBalance(
     @AuthDecorator() session: RedisSession,
@@ -61,8 +59,7 @@ export class WalletController {
       });
   }
 
-  @UseGuards(AuthGuard)
-  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
+  @UseGuards(AuthGuard, new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Post('transfer')
   async transfer(
     @AuthDecorator() session: RedisSession,

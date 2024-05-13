@@ -17,8 +17,7 @@ export class DepositController {
     this.response = new CustomResponse();
   }
 
-  @UseGuards(AuthGuard)
-  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
+  @UseGuards(AuthGuard, new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Get(':ccy')
   async getDepositAddressByCcy(
     @AuthDecorator() session: RedisSession,
@@ -39,8 +38,7 @@ export class DepositController {
       });
   }
 
-  @UseGuards(AuthGuard)
-  @UseGuards(new VerificationGuard(MultiFactorType.AUTHENTICATE))
+  @UseGuards(AuthGuard, new VerificationGuard(MultiFactorType.AUTHENTICATE))
   @Get('chain/:chain')
   async getDepositAddressByChain(
     @AuthDecorator() session: RedisSession,
