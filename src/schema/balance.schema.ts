@@ -1,32 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { v4 } from 'uuid';
-import { WalletType } from './wallet.enum';
 
 @Schema()
-export class Wallet {
+export class Balance {
   @Prop({ type: String, default: () => v4() })
   _id: string;
 
-  @Prop()
-  subAccount: string;
-
-  @Prop()
+  @Prop({ required: true })
   customerId: number;
 
-  @Prop()
+  @Prop({ required: true })
   ccy: string;
 
-  @Prop()
+  @Prop({ required: true })
   balance: string;
 
-  @Prop()
+  @Prop({ required: true })
   availableBalance: string;
 
-  @Prop()
+  @Prop({ required: true })
   frozenBalance: string;
-
-  @Prop()
-  walletType: WalletType;
 }
 
-export const WalletSchema = SchemaFactory.createForClass(Wallet);
+export const BalanceSchema = SchemaFactory.createForClass(Balance);

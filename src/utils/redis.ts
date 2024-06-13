@@ -38,7 +38,7 @@ export class RedisService {
         if (session) {
           return {
             id: session.id,
-            apiConfiguration: JSON.parse(session.apiConfiguration),
+            // apiConfiguration: JSON.parse(session.apiConfiguration),
             user: JSON.parse(session.user),
             sessionType: session.sessionType as SessionType,
           };

@@ -20,4 +20,10 @@ export class ExceptionMessages {
     '100-1001',
     HttpStatus.FORBIDDEN,
   );
+
+  static readonly ChainNotFound: ExceptionMessage = new CustomError(
+    'Chain Not Found',
+    '100-2006',
+    HttpStatus.BAD_REQUEST,
+  );
 }

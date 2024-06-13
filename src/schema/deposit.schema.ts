@@ -6,29 +6,24 @@ export class DepositAddress {
   @Prop({ type: String, default: () => v4() })
   _id: string;
 
-  @Prop()
-  subAccount: string;
-
-  @Prop()
+  @Prop({ required: true })
   customerId: number;
 
-  @Prop()
+  @Prop({ required: true })
+  subAccount: string;
+
+
+  @Prop({ required: true })
   chain: string;
 
-  @Prop()
-  ctAddr: string;
-
-  @Prop()
+  @Prop({ required: true })
   ccy: string;
 
-  @Prop()
-  to: string;
-
-  @Prop()
+  @Prop({ required: true })
   addr: string;
 
-  @Prop()
-  selected: boolean;
+  @Prop({ required: true })
+  network: string;
 }
 
 export const DepositAddressSchema =

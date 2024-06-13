@@ -7,12 +7,6 @@ import {
   VerificationType,
 } from './enum';
 
-export interface ApiConfiguration {
-  secretKey: string;
-  apiKey: string;
-  passphrase: string;
-}
-
 export interface AuthorizedUser {
   id: number;
   email: string;
@@ -33,7 +27,6 @@ export interface AuthorizedUser {
 
 export interface RedisSession {
   id: string;
-  apiConfiguration: ApiConfiguration;
   user: AuthorizedUser;
   sessionType: SessionType;
 }

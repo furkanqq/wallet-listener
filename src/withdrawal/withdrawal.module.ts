@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import {
   WithdrawalRequest,
   WithdrawalRequestSchema,
-} from './withdrawal.schema';
+} from '../schema/withdrawal.schema';
 import { WithdrawalController } from './withdrawal.controller';
 import { WithdrawalService } from './withdrawal.service';
 

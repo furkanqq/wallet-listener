@@ -1,5 +1,5 @@
 {
-  "name": "backend-boilerplate",
+  "name": "exchange-wallet",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -27,13 +27,17 @@
     "@nestjs/mongoose": "^10.0.2",
     "@nestjs/platform-express": "^10.0.0",
     "@types/uuid": "^9.0.8",
+    "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "mongoose": "^8.0.2",
-    "okx-api-connect": "^1.1.7",
+    "moralis": "^2.26.4",
+    "p-limit": "^5.0.0",
+    "qrcode": "^1.5.3",
     "redis": "^4.6.11",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "viem": "^2.13.8"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
