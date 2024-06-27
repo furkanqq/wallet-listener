@@ -7,16 +7,19 @@ export class WithdrawalRequest {
   _id: string;
 
   @Prop({ required: true })
-  customerId: string;
+  customerId: number;
+
+  @Prop({ required: true })
+  subAccount: string;
+
+  @Prop({ required: true })
+  amount: string;
 
   @Prop({ required: true })
   ccy: string;
 
   @Prop({ required: true })
   chain: string;
-
-  @Prop({ required: true })
-  amt: string;
 
   @Prop({ required: true })
   fee: string;

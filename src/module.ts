@@ -13,9 +13,11 @@ import { VerificationGuard } from './utils/api/verification';
 import { MultiFactorType } from './utils/enum';
 import { KycGuard } from './utils/api/kyc';
 import { BalanceModule } from './balance/balance.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot(),
     MongooseModule.forRoot(process.env.MONGO_URI),
     BalanceModule,

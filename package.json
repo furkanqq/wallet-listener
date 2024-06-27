@@ -26,6 +26,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/mongoose": "^10.0.2",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^4.0.2",
     "@types/uuid": "^9.0.8",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",

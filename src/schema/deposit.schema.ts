@@ -12,7 +12,6 @@ export class DepositAddress {
   @Prop({ required: true })
   subAccount: string;
 
-
   @Prop({ required: true })
   chain: string;
 

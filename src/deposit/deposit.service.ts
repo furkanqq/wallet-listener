@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DepositAddress } from '../schema/deposit.schema';
 import { Model } from 'mongoose';
 import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
-import { fromBytes } from 'viem';
+import { Address, erc20Abi, fromBytes } from 'viem';
 import { Wallet } from 'src/schema/wallet.schema';
 import { AuthorizedUser } from 'src/utils/abstract';
 import { CryptoService } from 'src/utils/crypto';
@@ -11,6 +11,9 @@ import { Network, NetworkType } from 'src/config/network';
 import { toDataURL } from 'qrcode';
 import { GetDepositAddressResponse } from './deposit.abstract';
 import { ExceptionMessages } from 'src/utils/api/exception';
+import { Coin } from 'src/schema/coin.schema';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { publicClient } from 'src/client';
 
 @Injectable()
 export class DepositService {
@@ -19,9 +22,12 @@ export class DepositService {
     private depositModel: Model<DepositAddress>,
     @InjectModel(Wallet.name)
     private walletModel: Model<Wallet>,
+    @InjectModel(Coin.name)
+    private coinModel: Model<Coin>,
   ) {
     this.depositModel = depositModel;
     this.walletModel = walletModel;
+    this.coinModel = coinModel;
   }
   _init(): void {}
 
@@ -59,7 +65,7 @@ export class DepositService {
       newDepositAddress.chain = chain;
       newDepositAddress.customerId = user.id;
       newDepositAddress.network = network;
-      newDepositAddress.subAccount = 'XidoPistaTebiskine';
+      newDepositAddress.subAccount = 'asd';
 
       await this.depositModel.create(newDepositAddress);
       depositAddress = newDepositAddress;

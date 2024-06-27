@@ -1,9 +1,10 @@
 import { IsNotEmpty, IsString } from 'class-validator';
+import { Address } from 'viem';
 
 export class WithdrawRequest {
   @IsString()
   @IsNotEmpty()
-  amt: string;
+  amount: string;
 
   @IsString()
   @IsNotEmpty()
@@ -19,5 +20,5 @@ export class WithdrawRequest {
 
   @IsString()
   @IsNotEmpty()
-  toAddr: string;
+  toAddr: Address;
 }
