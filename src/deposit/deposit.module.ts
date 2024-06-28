@@ -7,11 +7,13 @@ import { Wallet, WalletSchema } from 'src/schema/wallet.schema';
 import { Coin, CoinSchema } from 'src/schema/coin.schema';
 import { DepositInitializer } from './deposit.initializer';
 import { Balance, BalanceSchema } from 'src/schema/balance.schema';
+import { DepositHistory, DepositHistorySchema } from 'src/schema/depositHistory.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: DepositAddress.name, schema: DepositAddressSchema },
+      { name: DepositHistory.name, schema: DepositHistorySchema },
       { name: Wallet.name, schema: WalletSchema },
       { name: Coin.name, schema: CoinSchema },
       { name: Balance.name, schema: BalanceSchema },

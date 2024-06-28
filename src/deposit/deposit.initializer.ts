@@ -5,6 +5,7 @@ import { publicClient } from 'src/client';
 import { Balance } from 'src/schema/balance.schema';
 import { Coin } from 'src/schema/coin.schema';
 import { DepositAddress } from 'src/schema/deposit.schema';
+import { DepositHistory } from 'src/schema/depositHistory.schema';
 import { Address, erc20Abi, formatUnits, parseAbiItem, parseUnits } from 'viem';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class DepositInitializer implements OnModuleInit {
     private depositModel: Model<DepositAddress>,
     @InjectModel(Balance.name)
     private balanceModel: Model<Balance>,
+    @InjectModel(DepositHistory.name)
+    private depositHistoryModel: Model<DepositHistory>,
   ) {
     this.coinModel = coinModel;
     this.depositModel = depositModel;
@@ -96,6 +99,18 @@ export class DepositInitializer implements OnModuleInit {
                 ).toString();
                 await balance.save();
               }
+
+              const history = {
+                customerId: deposit.customerId,
+                chain: coin.chain,
+                tokenAddress: coin.address,
+                toAddr: to,
+                amount: value,
+                network: client.chain.name,
+                blockNumber: log.blockNumber,
+                txHash: log.transactionHash,
+              };
+              await this.depositHistoryModel.create(history);
             });
           },
         });
