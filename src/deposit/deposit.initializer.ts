@@ -6,7 +6,7 @@ import { Balance } from 'src/schema/balance.schema';
 import { Coin } from 'src/schema/coin.schema';
 import { DepositAddress } from 'src/schema/deposit.schema';
 import { DepositHistory } from 'src/schema/depositHistory.schema';
-import { Address, erc20Abi, formatUnits, parseAbiItem, parseUnits } from 'viem';
+import { Address, formatUnits, parseAbiItem, parseUnits } from 'viem';
 
 @Injectable()
 export class DepositInitializer implements OnModuleInit {
@@ -26,7 +26,16 @@ export class DepositInitializer implements OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
+    await this.nativeListener();
     await this.coinListener();
+  }
+
+  async nativeListener(): Promise<void> {
+    for (const client of publicClient) {
+      client.watchBlockNumber({
+        onBlockNumber: (blockNumber) => console.log(blockNumber, 'blockNumber'),
+      });
+    }
   }
 
   async coinListener(): Promise<void> {
@@ -58,6 +67,7 @@ export class DepositInitializer implements OnModuleInit {
           },
           onLogs: (logs) => {
             logs.map(async (log) => {
+              console.log('first');
               const to = log.args.to;
               const value = formatUnits(log.args.value, 18);
 

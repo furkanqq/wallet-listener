@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DepositAddress } from '../schema/deposit.schema';
 import { Model } from 'mongoose';
 import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
-import { Address, erc20Abi, fromBytes } from 'viem';
+import { Address, erc20Abi, formatUnits, fromBytes, parseUnits } from 'viem';
 import { Wallet } from 'src/schema/wallet.schema';
 import { AuthorizedUser } from 'src/utils/abstract';
 import { CryptoService } from 'src/utils/crypto';
@@ -13,7 +13,8 @@ import { GetDepositAddressResponse } from './deposit.abstract';
 import { ExceptionMessages } from 'src/utils/api/exception';
 import { Coin } from 'src/schema/coin.schema';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { publicClient } from 'src/client';
+import { nativeClient2, publicClient } from 'src/client';
+import { Balance } from 'src/schema/balance.schema';
 
 @Injectable()
 export class DepositService {
@@ -24,12 +25,74 @@ export class DepositService {
     private walletModel: Model<Wallet>,
     @InjectModel(Coin.name)
     private coinModel: Model<Coin>,
+    @InjectModel(Balance.name)
+    private balanceModel: Model<Balance>,
   ) {
     this.depositModel = depositModel;
     this.walletModel = walletModel;
     this.coinModel = coinModel;
+    this.balanceModel = balanceModel;
   }
   _init(): void {}
+
+  @Cron(CronExpression.EVERY_30_SECONDS)
+  async scheduleNativeBalance(): Promise<void> {
+    const addresses = await this.depositModel
+      .find({}, { addr: 1, customerId: 1, _id: 0 })
+      .exec();
+
+    const addrArray = addresses.map((address) => address.addr);
+
+    const uniqueAddrArray = [...new Set(addrArray)];
+
+    for (const client of publicClient) {
+      const chain = client.chain.nativeCurrency.name;
+      for (const addr of uniqueAddrArray) {
+        const value = await client.getBalance({
+          address: addr as Address,
+        });
+
+        const deposit = await this.depositModel.findOne({
+          addr: addr,
+        });
+
+        if (!deposit) {
+          return;
+        }
+
+        const balance = await this.balanceModel.findOne({
+          customerId: deposit.customerId,
+          ccy: chain,
+        });
+        if (!balance) {
+          const balance = {
+            ccy: chain,
+            customerId: deposit.customerId,
+            balance: value,
+            availableBalance: value,
+            frozenBalance: '0',
+          };
+          await this.balanceModel.create(balance);
+        } else {
+          balance.balance = parseUnits(
+            (
+              Number(balance.balance) / 10 ** 18 +
+              parseFloat(formatUnits(value, 18))
+            ).toString(),
+            18,
+          ).toString();
+          balance.availableBalance = parseUnits(
+            (
+              Number(balance.availableBalance) / 10 ** 18 +
+              parseFloat(formatUnits(value, 18))
+            ).toString(),
+            18,
+          ).toString();
+          await balance.save();
+        }
+      }
+    }
+  }
 
   async getDepositAddressByChain(
     chain: string,

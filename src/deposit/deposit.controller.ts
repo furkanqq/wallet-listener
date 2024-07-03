@@ -8,6 +8,7 @@ import { RedisSession } from 'src/utils/abstract';
 import { MultiFactorType } from 'src/utils/enum';
 import { VerificationGuard } from 'src/utils/api/verification';
 import { GetDepositAddressResponse } from './deposit.abstract';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Controller('api/deposit')
 export class DepositController {
