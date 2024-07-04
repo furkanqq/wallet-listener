@@ -1,3 +1,4 @@
+import { Address } from 'viem';
 import {
   AuthenticationType,
   Country,
@@ -74,6 +75,18 @@ export interface CustomOkxResponse<T> {
   code: string;
   message: string;
   data: T[];
+}
+
+export interface TransactionLog {
+  address: Address;
+  blockHash: Address;
+  blockNumber: bigint;
+  data: Address;
+  logIndex: number;
+  transactionHash: Address;
+  transactionIndex: number;
+  removed: boolean;
+  topics: string[];
 }
 
 export interface ValidationError {

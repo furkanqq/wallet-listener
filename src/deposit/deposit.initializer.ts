@@ -6,7 +6,14 @@ import { Balance } from 'src/schema/balance.schema';
 import { Coin } from 'src/schema/coin.schema';
 import { DepositAddress } from 'src/schema/deposit.schema';
 import { DepositHistory } from 'src/schema/depositHistory.schema';
-import { Address, formatUnits, parseAbiItem, parseUnits } from 'viem';
+import { TransactionLog } from 'src/utils/abstract';
+import {
+  Address,
+  decodeAbiParameters,
+  formatUnits,
+  parseAbiItem,
+  parseUnits,
+} from 'viem';
 import { getTransactionReceipt } from 'viem/_types/actions/public/getTransactionReceipt';
 
 @Injectable()
@@ -33,37 +40,80 @@ export class DepositInitializer implements OnModuleInit {
 
   async nativeListener(): Promise<void> {
     const addresses = [
-      '0x355b3ca2b5e8ea04e65c41b0ea73a88c4f39ac9a',
-      '0x2147409d92c7862e2b031afbf94336f43296847e',
+      '0x7f3a4c6817aedbb79a6d9effa5dfa9a0f1f44622', // elt token
+      '0x883138d67cefb848c2aa41b9ddf5ae96f3773db7', // oct458 token
+      '0x2147409d92c7862e2b031afbf94336f43296847e', // ahmetin account
     ];
 
-    for (const client of publicClient) {
-      client.watchBlocks({
-        onBlock: (block) => {
-          block.transactions.map(async (hash) => {
-            try {
-              const transaction = await client.waitForTransactionReceipt({
-                hash,
-              });
+    // for (const client of publicClient) {
+    const client = publicClient[1];
 
-              if (transaction.to) {
-                if (addresses.includes(transaction.to.toLowerCase())) {
-                  // native
-                  if (transaction.logs.length === 0) {
-                    const response = await client.getTransaction({
-                      hash: transaction.transactionHash,
-                    });
-                    console.log(response);
-                  }
-                }
+    client.watchBlocks({
+      onBlock: (block) => {
+        block.transactions.map(async (hash) => {
+          try {
+            const object = {
+              from: '',
+              to: '',
+              value: 0,
+              tokenAddress: '',
+            };
+
+            const transaction = await client.waitForTransactionReceipt({
+              hash,
+            });
+            if (
+              transaction.to &&
+              addresses.includes(transaction.to.toLowerCase())
+            ) {
+              // native token observer
+              if (transaction.logs.length === 0) {
+                const response = await client.getTransaction({
+                  hash: transaction.transactionHash,
+                });
+
+                object.from = response.from;
+                (object.to = response.to),
+                  (object.value = Number(response.value) / 10 ** 18);
+                object.tokenAddress = '0';
               }
-            } catch (error) {
-              console.log(error);
+              // other tokens observer
+              else {
+                object.from =
+                  '0x' +
+                  (transaction.logs as TransactionLog[])[0].topics[1].slice(
+                    -40,
+                  );
+                object.to =
+                  '0x' +
+                  (transaction.logs as TransactionLog[])[0].topics[2].slice(
+                    -40,
+                  );
+                object.value =
+                  Number(
+                    decodeAbiParameters(
+                      [
+                        {
+                          type: 'uint256',
+                          name: 'amount',
+                        },
+                      ],
+                      transaction.logs[0].data,
+                    ),
+                  ) /
+                  10 ** 18;
+                object.tokenAddress = transaction.to;
+              }
             }
-          });
-        },
-      });
-    }
+
+            // write object to database
+          } catch (error) {
+            console.log(error);
+          }
+        });
+      },
+    });
+    // }
   }
 
   async coinListener(): Promise<void> {
