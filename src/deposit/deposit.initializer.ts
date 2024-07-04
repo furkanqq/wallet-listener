@@ -7,6 +7,7 @@ import { Coin } from 'src/schema/coin.schema';
 import { DepositAddress } from 'src/schema/deposit.schema';
 import { DepositHistory } from 'src/schema/depositHistory.schema';
 import { Address, formatUnits, parseAbiItem, parseUnits } from 'viem';
+import { getTransactionReceipt } from 'viem/_types/actions/public/getTransactionReceipt';
 
 @Injectable()
 export class DepositInitializer implements OnModuleInit {
@@ -31,9 +32,36 @@ export class DepositInitializer implements OnModuleInit {
   }
 
   async nativeListener(): Promise<void> {
+    const addresses = [
+      '0x355b3ca2b5e8ea04e65c41b0ea73a88c4f39ac9a',
+      '0x2147409d92c7862e2b031afbf94336f43296847e',
+    ];
+
     for (const client of publicClient) {
-      client.watchBlockNumber({
-        onBlockNumber: (blockNumber) => console.log(blockNumber, 'blockNumber'),
+      client.watchBlocks({
+        onBlock: (block) => {
+          block.transactions.map(async (hash) => {
+            try {
+              const transaction = await client.waitForTransactionReceipt({
+                hash,
+              });
+
+              if (transaction.to) {
+                if (addresses.includes(transaction.to.toLowerCase())) {
+                  // native
+                  if (transaction.logs.length === 0) {
+                    const response = await client.getTransaction({
+                      hash: transaction.transactionHash,
+                    });
+                    console.log(response);
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(error);
+            }
+          });
+        },
       });
     }
   }

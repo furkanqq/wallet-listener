@@ -8,7 +8,7 @@ export const publicClient = [
   }),
   createPublicClient({
     chain: bsc,
-    transport: http(),
+    transport: http('https://bsc-dataseed1.binance.org/'),
   }),
   createPublicClient({
     chain: fantom,
