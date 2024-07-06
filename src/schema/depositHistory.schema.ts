@@ -7,7 +7,7 @@ export class DepositHistory {
   _id: string;
 
   @Prop({ required: true })
-  customerId: number;
+  from: number;
 
   @Prop({ required: true })
   chain: string;
@@ -16,10 +16,10 @@ export class DepositHistory {
   tokenAddress: string;
 
   @Prop({ required: true })
-  toAddr: string;
+  to: string;
 
   @Prop({ required: true })
-  amount: string;
+  value: string;
 
   @Prop({ required: true })
   network: string;
@@ -28,7 +28,7 @@ export class DepositHistory {
   blockNumber: string;
 
   @Prop({ required: true })
-  txHash: string;
+  transactionHash: string;
 }
 
 export const DepositHistorySchema =

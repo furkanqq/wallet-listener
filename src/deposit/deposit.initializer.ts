@@ -7,6 +7,7 @@ import { Coin } from 'src/schema/coin.schema';
 import { DepositAddress } from 'src/schema/deposit.schema';
 import { DepositHistory } from 'src/schema/depositHistory.schema';
 import { TransferObject } from 'src/utils/abstract';
+import { RedisService } from 'src/utils/redis';
 import {
   Address,
   decodeEventLog,
@@ -34,32 +35,46 @@ export class DepositInitializer implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.nativeListener();
-    await this.coinListener();
+    // await this.coinListener();
   }
+
+  // async coinRedis(): Promise<void> {
+  //   const coins = await this.coinModel.find({
+  //     active: true,
+  //   });
+
+  //   const redisService = new RedisService();
+
+  //   for (const coin of coins) {
+  //     await redisService.addCoinAddressToRedis({
+  //       _id: coin._id,
+  //       address: coin.address,
+  //     });
+  //   }
+  // }
 
   async nativeListener(): Promise<void> {
     const depositAddresses = [
       '0x2147409d92c7862e2b031afbf94336f43296847e', // ahmetin account
-    ];
+    ]; // redisten cekilecek redise bir sey kayit etmedim su an
 
-    const tokenAddresses = [
-      '0x7f3a4c6817aedbb79a6d9effa5dfa9a0f1f44622', // elt token
-      '0x883138d67cefb848c2aa41b9ddf5ae96f3773db7', // oct458 token
-      '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c', // wbnb,
-      '0xa1d641d0da02d360dd5967ee2433533c3993ea12', // mrk token mainnet
-    ];
+    const redisService = new RedisService();
 
     // for (const client of publicClient) {
     const client = publicClient[1];
 
     client.watchBlocks({
-      onBlock: (block) => {
+      onBlock: async (block) => {
+
+        const tokenAddresses =
+        await redisService.getAllCoinAddressFromRedis();
+        console.log(tokenAddresses[0].addr, 'tokenAddresses');
+
         block.transactions.map(async (hash) => {
           try {
             const transaction = await client.waitForTransactionReceipt({
               hash,
             });
-
             // native tokens
             if (
               depositAddresses.includes(transaction.to.toLowerCase()) &&
@@ -69,17 +84,27 @@ export class DepositInitializer implements OnModuleInit {
                 hash: transaction.transactionHash,
               });
 
-              const object: TransferObject = {
+              const chain = tokenAddresses.find(
+                (token) =>
+                  token.addr.toLowerCase() === transaction.to.toLowerCase(),
+              );
+
+              const history: TransferObject = {
                 transactionHash: nativeTransaction.hash,
                 blockNumber: nativeTransaction.blockNumber,
                 from: nativeTransaction.from,
                 to: nativeTransaction.to,
                 value: nativeTransaction.value.toString(),
                 tokenAddress: '0x',
+                network: client.chain.name,
+                chain: chain._id,
               };
 
-              console.log(object);
+              console.log(history, 'history');
 
+              console.log(await this.depositHistoryModel.create(history));
+
+              // return await this.depositHistoryModel.create(history);
               return;
             }
 
@@ -97,19 +122,31 @@ export class DepositInitializer implements OnModuleInit {
             if (
               topics[0].eventName === 'Transfer' &&
               topics[0].args.value !== 0n &&
-              tokenAddresses.includes(transaction.to.toLowerCase()) &&
+              tokenAddresses.some(
+                (token) =>
+                  token.addr.toLowerCase() === transaction.to.toLowerCase(),
+              ) &&
               depositAddresses.includes(topics[0].args.to.toLowerCase())
             ) {
-              const transferObject: TransferObject = {
+              const chain = tokenAddresses.find(
+                (token) =>
+                  token.addr.toLowerCase() === transaction.to.toLowerCase(),
+              );
+
+              const history: TransferObject = {
                 transactionHash: transaction.transactionHash,
                 blockNumber: transaction.blockNumber,
                 from: topics[0].args.from,
                 to: topics[0].args.to,
                 value: topics[0].args.value.toString(),
                 tokenAddress: transaction.to,
+                network: client.chain.name,
+                chain: chain._id,
               };
 
-              console.log(transferObject);
+              console.log(history, 'history');
+
+              console.log(await this.depositHistoryModel.create(history));
 
               return;
             }
@@ -120,93 +157,92 @@ export class DepositInitializer implements OnModuleInit {
     // }
   }
 
-  async coinListener(): Promise<void> {
-    const coins = await this.coinModel.find({
-      active: true,
-    });
+  // async coinListener(): Promise<void> {
+  //   const coins = await this.coinModel.find({
+  //     active: true,
+  //   });
 
-    const addresses = await this.depositModel
-      .find({}, { addr: 1, customerId: 1, _id: 0 })
-      .exec();
+  //   const addresses = await this.depositModel
+  //     .find({}, { addr: 1, customerId: 1, _id: 0 })
+  //     .exec();
 
-    if (!coins.length) {
-      return;
-    }
+  //   if (!coins.length) {
+  //     return;
+  //   }
 
-    for (const coin of coins) {
-      const addrArray = addresses.map((address) => address.addr);
+  //   for (const coin of coins) {
+  //     const addrArray = addresses.map((address) => address.addr);
 
-      const uniqueAddrArray = [...new Set(addrArray)];
+  //     const uniqueAddrArray = [...new Set(addrArray)];
 
-      for (const client of publicClient) {
-        client.watchEvent({
-          address: coin.address as Address,
-          event: parseAbiItem(
-            'event Transfer(address indexed from, address indexed to, uint256 value)',
-          ),
-          args: {
-            to: uniqueAddrArray as Address[],
-          },
-          onLogs: (logs) => {
-            logs.map(async (log) => {
-              console.log('first');
-              const to = log.args.to;
-              const value = formatUnits(log.args.value, 18);
+  //     for (const client of publicClient) {
+  //       client.watchEvent({
+  //         address: coin.address as Address,
+  //         event: parseAbiItem(
+  //           'event Transfer(address indexed from, address indexed to, uint256 value)',
+  //         ),
+  //         args: {
+  //           to: uniqueAddrArray as Address[],
+  //         },
+  //         onLogs: (logs) => {
+  //           logs.map(async (log) => {
+  //             console.log('first');
+  //             const to = log.args.to;
+  //             const value = formatUnits(log.args.value, 18);
 
-              const deposit = await this.depositModel.findOne({
-                addr: to,
-              });
+  //             const deposit = await this.depositModel.findOne({
+  //               addr: to,
+  //             });
 
-              if (!deposit) {
-                return;
-              }
+  //             if (!deposit) {
+  //               return;
+  //             }
 
-              const balance = await this.balanceModel.findOne({
-                customerId: deposit.customerId,
-                ccy: coin.ccy,
-              });
-              if (!balance) {
-                const balance = {
-                  ccy: coin.ccy,
-                  customerId: deposit.customerId,
-                  balance: parseUnits(value, 18),
-                  availableBalance: parseUnits(value, 18),
-                  frozenBalance: '0',
-                };
-                await this.balanceModel.create(balance);
-              } else {
-                balance.balance = parseUnits(
-                  (
-                    Number(balance.balance) / 10 ** 18 +
-                    parseFloat(value)
-                  ).toString(),
-                  18,
-                ).toString();
-                balance.availableBalance = parseUnits(
-                  (
-                    Number(balance.availableBalance) / 10 ** 18 +
-                    parseFloat(value)
-                  ).toString(),
-                  18,
-                ).toString();
-                await balance.save();
-              }
+  //             const balance = await this.balanceModel.findOne({
+  //               customerId: deposit.customerId,
+  //               ccy: coin.ccy,
+  //             });
+  //             if (!balance) {
+  //               const balance = {
+  //                 ccy: coin.ccy,
+  //                 customerId: deposit.customerId,
+  //                 balance: parseUnits(value, 18),
+  //                 availableBalance: parseUnits(value, 18),
+  //                 frozenBalance: '0',
+  //               };
+  //               await this.balanceModel.create(balance);
+  //             } else {
+  //               balance.balance = parseUnits(
+  //                 (
+  //                   Number(balance.balance) / 10 ** 18 +
+  //                   parseFloat(value)
+  //                 ).toString(),
+  //                 18,
+  //               ).toString();
+  //               balance.availableBalance = parseUnits(
+  //                 (
+  //                   Number(balance.availableBalance) / 10 ** 18 +
+  //                   parseFloat(value)
+  //                 ).toString(),
+  //                 18,
+  //               ).toString();
+  //               await balance.save();
+  //             }
 
-              const history = {
-                customerId: deposit.customerId,
-                chain: coin.chain,
-                tokenAddress: coin.address,
-                toAddr: to,
-                amount: value,
-                network: client.chain.name,
-                blockNumber: log.blockNumber,
-                txHash: log.transactionHash,
-              };
-              await this.depositHistoryModel.create(history);
-            });
-          },
-        });
-      }
-    }
-  }
+  //             const history = {
+  //               chain: coin.chain,
+  //               tokenAddress: coin.address,
+  //               toAddr: to,
+  //               amount: value,
+  //               network: client.chain.name,
+  //               blockNumber: log.blockNumber,
+  //               transactionHash: log.transactionHash,
+  //             };
+  //             await this.depositHistoryModel.create(history);
+  //           });
+  //         },
+  //       });
+  //     }
+  //   }
+  // }
 }

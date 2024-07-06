@@ -35,64 +35,64 @@ export class DepositService {
   }
   _init(): void {}
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
-  async scheduleNativeBalance(): Promise<void> {
-    const addresses = await this.depositModel
-      .find({}, { addr: 1, customerId: 1, _id: 0 })
-      .exec();
+  // @Cron(CronExpression.EVERY_30_SECONDS)
+  // async scheduleNativeBalance(): Promise<void> {
+  //   const addresses = await this.depositModel
+  //     .find({}, { addr: 1, customerId: 1, _id: 0 })
+  //     .exec();
 
-    const addrArray = addresses.map((address) => address.addr);
+  //   const addrArray = addresses.map((address) => address.addr);
 
-    const uniqueAddrArray = [...new Set(addrArray)];
+  //   const uniqueAddrArray = [...new Set(addrArray)];
 
-    for (const client of publicClient) {
-      const chain = client.chain.nativeCurrency.name;
-      for (const addr of uniqueAddrArray) {
-        const value = await client.getBalance({
-          address: addr as Address,
-        });
+  //   for (const client of publicClient) {
+  //     const chain = client.chain.nativeCurrency.name;
+  //     for (const addr of uniqueAddrArray) {
+  //       const value = await client.getBalance({
+  //         address: addr as Address,
+  //       });
 
-        const deposit = await this.depositModel.findOne({
-          addr: addr,
-        });
+  //       const deposit = await this.depositModel.findOne({
+  //         addr: addr,
+  //       });
 
-        if (!deposit) {
-          return;
-        }
+  //       if (!deposit) {
+  //         return;
+  //       }
 
-        const balance = await this.balanceModel.findOne({
-          customerId: deposit.customerId,
-          ccy: chain,
-        });
-        if (!balance) {
-          const balance = {
-            ccy: chain,
-            customerId: deposit.customerId,
-            balance: value,
-            availableBalance: value,
-            frozenBalance: '0',
-          };
-          await this.balanceModel.create(balance);
-        } else {
-          balance.balance = parseUnits(
-            (
-              Number(balance.balance) / 10 ** 18 +
-              parseFloat(formatUnits(value, 18))
-            ).toString(),
-            18,
-          ).toString();
-          balance.availableBalance = parseUnits(
-            (
-              Number(balance.availableBalance) / 10 ** 18 +
-              parseFloat(formatUnits(value, 18))
-            ).toString(),
-            18,
-          ).toString();
-          await balance.save();
-        }
-      }
-    }
-  }
+  //       const balance = await this.balanceModel.findOne({
+  //         customerId: deposit.customerId,
+  //         ccy: chain,
+  //       });
+  //       if (!balance) {
+  //         const balance = {
+  //           ccy: chain,
+  //           customerId: deposit.customerId,
+  //           balance: value,
+  //           availableBalance: value,
+  //           frozenBalance: '0',
+  //         };
+  //         await this.balanceModel.create(balance);
+  //       } else {
+  //         balance.balance = parseUnits(
+  //           (
+  //             Number(balance.balance) / 10 ** 18 +
+  //             parseFloat(formatUnits(value, 18))
+  //           ).toString(),
+  //           18,
+  //         ).toString();
+  //         balance.availableBalance = parseUnits(
+  //           (
+  //             Number(balance.availableBalance) / 10 ** 18 +
+  //             parseFloat(formatUnits(value, 18))
+  //           ).toString(),
+  //           18,
+  //         ).toString();
+  //         await balance.save();
+  //       }
+  //     }
+  //   }
+  // }
 
   async getDepositAddressByChain(
     chain: string,

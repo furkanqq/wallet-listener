@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { createClient } from 'redis';
-import { DecodedJwt, MultiFactorSession, RedisSession } from './abstract';
+import { DecodedJwt, MultiFactorSession, RedisCoinAddress, RedisSession } from './abstract';
 import { MultiFactorType, SessionType } from './enum';
+import { DepositAddress } from 'src/schema/deposit.schema';
+import { Coin } from 'src/schema/coin.schema';
 
 @Injectable()
 export class RedisService {
@@ -122,5 +124,89 @@ export class RedisService {
 
     await client.sRem(`${multiFactorType}_VERIFICATION_SESSIONS`, token);
     await client.del(`${multiFactorType}_VERIFICATION_SESSIONS:${token}`);
+  }
+
+  async addDepositAddressToRedis(
+    depositAddress: DepositAddress,
+  ): Promise<boolean> {
+    const client = this.connectRedis();
+
+    const isOk = await client
+      .hSet(`deposit_address:${depositAddress._id}`, {
+        _id: depositAddress._id,
+        addr: depositAddress.addr,
+      })
+      .then(() => true)
+      .catch(() => false);
+
+    if (isOk) {
+      return await client
+        .sAdd('deposit_address', depositAddress._id)
+        .then((res) => !!res)
+        .catch(() => false);
+    }
+
+    return isOk;
+  }
+
+  async getAllDepositAddressFromRedis(): Promise<DepositAddress[]> {
+    const client = this.connectRedis();
+
+    const depositAddressKeys = await client.sMembers('deposit_address');
+    let depositAddresses = [];
+    if (depositAddressKeys && depositAddressKeys.length > 0) {
+      depositAddresses = await Promise.all(
+        depositAddressKeys.map(async (key) => {
+          const depositAddress = await client.hGetAll(`deposit_address:${key}`);
+          return depositAddress;
+        }),
+      );
+    }
+    return depositAddresses;
+  }
+
+  async addCoinAddressToRedis(
+    coinAddress: Pick<Coin, '_id' | 'address'>,
+  ): Promise<boolean> {
+    const client = this.connectRedis();
+
+    const isOk = await client
+      .hSet(`coin_address:${coinAddress._id}`, {
+        _id: coinAddress._id,
+        addr: coinAddress.address,
+      })
+      .then(() => true)
+      .catch(() => false);
+
+    if (isOk) {
+      return await client
+        .sAdd('coin_address', coinAddress._id)
+        .then((res) => !!res)
+        .catch(() => false);
+    }
+
+    return isOk;
+  }
+
+  async getAllCoinAddressFromRedis(): Promise<RedisCoinAddress[]> {
+    const client = this.connectRedis();
+
+    const coinAddressKeys = await client.sMembers('coin_address');
+    let coinAddresses = [];
+    if (coinAddressKeys && coinAddressKeys.length > 0) {
+      coinAddresses = await Promise.all(
+        coinAddressKeys.map(async (key) => {
+          const coinAddress = await client.hGetAll(`coin_address:${key}`);
+          
+          return{
+            _id: coinAddress._id,
+            addr: coinAddress.addr,
+          }
+        }),
+      );
+      
+    }
+    console.log(coinAddresses[0])
+    return coinAddresses;
   }
 }

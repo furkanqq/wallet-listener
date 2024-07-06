@@ -108,6 +108,8 @@ export interface TransferObject {
   value: string;
   blockNumber: BigInt;
   tokenAddress: Address;
+  network: string;
+  chain: string;
 }
 
 export type Topics = {
@@ -118,3 +120,8 @@ export type Topics = {
     value: BigInt;
   };
 }[];
+
+export interface RedisCoinAddress{
+  _id: string;
+  addr: string;
+}
