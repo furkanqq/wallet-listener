@@ -100,3 +100,21 @@ export interface ValidationError {
   message: string;
   name: string;
 }
+
+export interface TransferObject {
+  transactionHash: `0x${string}`;
+  from: Address;
+  to: Address;
+  value: string;
+  blockNumber: BigInt;
+  tokenAddress: Address;
+}
+
+export type Topics = {
+  eventName: string;
+  args: {
+    from: Address;
+    to: Address;
+    value: BigInt;
+  };
+}[];

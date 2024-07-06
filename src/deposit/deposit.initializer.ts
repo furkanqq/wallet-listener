@@ -6,16 +6,15 @@ import { Balance } from 'src/schema/balance.schema';
 import { Coin } from 'src/schema/coin.schema';
 import { DepositAddress } from 'src/schema/deposit.schema';
 import { DepositHistory } from 'src/schema/depositHistory.schema';
-import { TransactionLog } from 'src/utils/abstract';
+import { TransferObject } from 'src/utils/abstract';
 import {
   Address,
-  decodeAbiParameters,
+  decodeEventLog,
+  erc20Abi,
   formatUnits,
   parseAbiItem,
   parseUnits,
 } from 'viem';
-import { getTransactionReceipt } from 'viem/_types/actions/public/getTransactionReceipt';
-
 @Injectable()
 export class DepositInitializer implements OnModuleInit {
   constructor(
@@ -39,10 +38,15 @@ export class DepositInitializer implements OnModuleInit {
   }
 
   async nativeListener(): Promise<void> {
-    const addresses = [
+    const depositAddresses = [
+      '0x2147409d92c7862e2b031afbf94336f43296847e', // ahmetin account
+    ];
+
+    const tokenAddresses = [
       '0x7f3a4c6817aedbb79a6d9effa5dfa9a0f1f44622', // elt token
       '0x883138d67cefb848c2aa41b9ddf5ae96f3773db7', // oct458 token
-      '0x2147409d92c7862e2b031afbf94336f43296847e', // ahmetin account
+      '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c', // wbnb,
+      '0xa1d641d0da02d360dd5967ee2433533c3993ea12', // mrk token mainnet
     ];
 
     // for (const client of publicClient) {
@@ -52,64 +56,64 @@ export class DepositInitializer implements OnModuleInit {
       onBlock: (block) => {
         block.transactions.map(async (hash) => {
           try {
-            const object = {
-              from: '',
-              to: '',
-              value: 0,
-              tokenAddress: '',
-            };
-
             const transaction = await client.waitForTransactionReceipt({
               hash,
             });
-            if (
-              transaction.to &&
-              addresses.includes(transaction.to.toLowerCase())
-            ) {
-              // native token observer
-              if (transaction.logs.length === 0) {
-                const response = await client.getTransaction({
-                  hash: transaction.transactionHash,
-                });
 
-                object.from = response.from;
-                (object.to = response.to),
-                  (object.value = Number(response.value) / 10 ** 18);
-                object.tokenAddress = '0';
-              }
-              // other tokens observer
-              else {
-                object.from =
-                  '0x' +
-                  (transaction.logs as TransactionLog[])[0].topics[1].slice(
-                    -40,
-                  );
-                object.to =
-                  '0x' +
-                  (transaction.logs as TransactionLog[])[0].topics[2].slice(
-                    -40,
-                  );
-                object.value =
-                  Number(
-                    decodeAbiParameters(
-                      [
-                        {
-                          type: 'uint256',
-                          name: 'amount',
-                        },
-                      ],
-                      transaction.logs[0].data,
-                    ),
-                  ) /
-                  10 ** 18;
-                object.tokenAddress = transaction.to;
-              }
+            // native tokens
+            if (
+              depositAddresses.includes(transaction.to.toLowerCase()) &&
+              transaction.logs.length === 0
+            ) {
+              const nativeTransaction = await client.getTransaction({
+                hash: transaction.transactionHash,
+              });
+
+              const object: TransferObject = {
+                transactionHash: nativeTransaction.hash,
+                blockNumber: nativeTransaction.blockNumber,
+                from: nativeTransaction.from,
+                to: nativeTransaction.to,
+                value: nativeTransaction.value.toString(),
+                tokenAddress: '0x',
+              };
+
+              console.log(object);
+
+              return;
             }
 
-            // write object to database
-          } catch (error) {
-            console.log(error);
-          }
+            const topics = transaction.logs.map((log: any) => {
+              const decoded = decodeEventLog({
+                abi: erc20Abi,
+                data: log.data,
+                topics: log.topics,
+              });
+
+              return decoded as any;
+            });
+
+            // erc20 tokens
+            if (
+              topics[0].eventName === 'Transfer' &&
+              topics[0].args.value !== 0n &&
+              tokenAddresses.includes(transaction.to.toLowerCase()) &&
+              depositAddresses.includes(topics[0].args.to.toLowerCase())
+            ) {
+              const transferObject: TransferObject = {
+                transactionHash: transaction.transactionHash,
+                blockNumber: transaction.blockNumber,
+                from: topics[0].args.from,
+                to: topics[0].args.to,
+                value: topics[0].args.value.toString(),
+                tokenAddress: transaction.to,
+              };
+
+              console.log(transferObject);
+
+              return;
+            }
+          } catch (error) {}
         });
       },
     });

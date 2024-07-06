@@ -7,12 +7,9 @@ export const publicClient = [
     transport: http(),
   }),
   createPublicClient({
-    chain: bscTestnet,
-    // transport: http('http://165.22.64.104:8545'),
+    chain: bsc,
     // transport: http(),
-    transport: http(
-      'https://quick-nameless-putty.bsc-testnet.quiknode.pro/c78675dda581df23e183e7744ecf3e6b437204bc/',
-    ),
+    transport: http('https://bsc-dataseed2.binance.org/'),
   }),
   createPublicClient({
     chain: fantom,
