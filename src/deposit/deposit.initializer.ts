@@ -36,6 +36,7 @@ export class DepositInitializer implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.nativeListener();
     // await this.coinListener();
+    // await this.coinRedis();
   }
 
   // async coinRedis(): Promise<void> {
@@ -65,10 +66,7 @@ export class DepositInitializer implements OnModuleInit {
 
     client.watchBlocks({
       onBlock: async (block) => {
-
-        const tokenAddresses =
-        await redisService.getAllCoinAddressFromRedis();
-        console.log(tokenAddresses[0].addr, 'tokenAddresses');
+        const tokenAddresses = await redisService.getAllCoinAddressFromRedis();
 
         block.transactions.map(async (hash) => {
           try {
@@ -78,16 +76,12 @@ export class DepositInitializer implements OnModuleInit {
             // native tokens
             if (
               depositAddresses.includes(transaction.to.toLowerCase()) &&
-              transaction.logs.length === 0
+              transaction.logs.length < 1
             ) {
+              console.log('first');
               const nativeTransaction = await client.getTransaction({
                 hash: transaction.transactionHash,
               });
-
-              const chain = tokenAddresses.find(
-                (token) =>
-                  token.addr.toLowerCase() === transaction.to.toLowerCase(),
-              );
 
               const history: TransferObject = {
                 transactionHash: nativeTransaction.hash,
@@ -97,15 +91,11 @@ export class DepositInitializer implements OnModuleInit {
                 value: nativeTransaction.value.toString(),
                 tokenAddress: '0x',
                 network: client.chain.name,
-                chain: chain._id,
+                chain:
+                  client.chain.nativeCurrency.name + '-' + client.chain.name,
               };
 
-              console.log(history, 'history');
-
-              console.log(await this.depositHistoryModel.create(history));
-
-              // return await this.depositHistoryModel.create(history);
-              return;
+              return await this.depositHistoryModel.create(history);
             }
 
             const topics = transaction.logs.map((log: any) => {
@@ -124,13 +114,13 @@ export class DepositInitializer implements OnModuleInit {
               topics[0].args.value !== 0n &&
               tokenAddresses.some(
                 (token) =>
-                  token.addr.toLowerCase() === transaction.to.toLowerCase(),
+                  token.address.toLowerCase() === transaction.to.toLowerCase(),
               ) &&
               depositAddresses.includes(topics[0].args.to.toLowerCase())
             ) {
               const chain = tokenAddresses.find(
                 (token) =>
-                  token.addr.toLowerCase() === transaction.to.toLowerCase(),
+                  token.address.toLowerCase() === transaction.to.toLowerCase(),
               );
 
               const history: TransferObject = {
@@ -144,11 +134,7 @@ export class DepositInitializer implements OnModuleInit {
                 chain: chain._id,
               };
 
-              console.log(history, 'history');
-
-              console.log(await this.depositHistoryModel.create(history));
-
-              return;
+              return await this.depositHistoryModel.create(history);
             }
           } catch (error) {}
         });

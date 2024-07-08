@@ -7,7 +7,7 @@ export class DepositHistory {
   _id: string;
 
   @Prop({ required: true })
-  from: number;
+  from: string;
 
   @Prop({ required: true })
   chain: string;

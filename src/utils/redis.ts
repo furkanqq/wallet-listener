@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { createClient } from 'redis';
-import { DecodedJwt, MultiFactorSession, RedisCoinAddress, RedisSession } from './abstract';
+import { DecodedJwt, MultiFactorSession, RedisSession } from './abstract';
 import { MultiFactorType, SessionType } from './enum';
 import { DepositAddress } from 'src/schema/deposit.schema';
 import { Coin } from 'src/schema/coin.schema';
@@ -173,7 +173,7 @@ export class RedisService {
     const isOk = await client
       .hSet(`coin_address:${coinAddress._id}`, {
         _id: coinAddress._id,
-        addr: coinAddress.address,
+        address: coinAddress.address,
       })
       .then(() => true)
       .catch(() => false);
@@ -188,7 +188,7 @@ export class RedisService {
     return isOk;
   }
 
-  async getAllCoinAddressFromRedis(): Promise<RedisCoinAddress[]> {
+  async getAllCoinAddressFromRedis(): Promise<Pick<Coin, '_id' | 'address'>[]> {
     const client = this.connectRedis();
 
     const coinAddressKeys = await client.sMembers('coin_address');
@@ -197,16 +197,10 @@ export class RedisService {
       coinAddresses = await Promise.all(
         coinAddressKeys.map(async (key) => {
           const coinAddress = await client.hGetAll(`coin_address:${key}`);
-          
-          return{
-            _id: coinAddress._id,
-            addr: coinAddress.addr,
-          }
+          return coinAddress;
         }),
       );
-      
     }
-    console.log(coinAddresses[0])
     return coinAddresses;
   }
 }
