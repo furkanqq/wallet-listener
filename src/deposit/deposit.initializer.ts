@@ -61,86 +61,89 @@ export class DepositInitializer implements OnModuleInit {
 
     const redisService = new RedisService();
 
-    // for (const client of publicClient) {
-    const client = publicClient[1];
+    for (const client of publicClient) {
+      client.watchBlocks({
+        onBlock: async (block) => {
+          const tokenAddresses =
+            await redisService.getAllCoinAddressFromRedis();
 
-    client.watchBlocks({
-      onBlock: async (block) => {
-        const tokenAddresses = await redisService.getAllCoinAddressFromRedis();
+          const depositAddresses2 =
+            await redisService.getAllDepositAddressFromRedis();
 
-        block.transactions.map(async (hash) => {
-          try {
-            const transaction = await client.waitForTransactionReceipt({
-              hash,
-            });
-            // native tokens
-            if (
-              depositAddresses.includes(transaction.to.toLowerCase()) &&
-              transaction.logs.length < 1
-            ) {
-              console.log('first');
-              const nativeTransaction = await client.getTransaction({
-                hash: transaction.transactionHash,
+          block.transactions.map(async (hash) => {
+            try {
+              const transaction = await client.waitForTransactionReceipt({
+                hash,
+              });
+              // native tokens
+              if (
+                depositAddresses.includes(transaction.to.toLowerCase()) &&
+                transaction.logs.length < 1
+              ) {
+                const nativeTransaction = await client.getTransaction({
+                  hash: transaction.transactionHash,
+                });
+
+                const history: TransferObject = {
+                  transactionHash: nativeTransaction.hash,
+                  blockNumber: nativeTransaction.blockNumber,
+                  from: nativeTransaction.from,
+                  to: nativeTransaction.to,
+                  value: nativeTransaction.value.toString(),
+                  tokenAddress: '0x',
+                  network: client.chain.name,
+                  chain:
+                    client.chain.nativeCurrency.name + '-' + client.chain.name,
+                };
+
+                return await this.depositHistoryModel.create(history);
+              }
+
+              const topics = transaction.logs.map((log: any) => {
+                const decoded = decodeEventLog({
+                  abi: erc20Abi,
+                  data: log.data,
+                  topics: log.topics,
+                });
+
+                return decoded as any;
               });
 
-              const history: TransferObject = {
-                transactionHash: nativeTransaction.hash,
-                blockNumber: nativeTransaction.blockNumber,
-                from: nativeTransaction.from,
-                to: nativeTransaction.to,
-                value: nativeTransaction.value.toString(),
-                tokenAddress: '0x',
-                network: client.chain.name,
-                chain:
-                  client.chain.nativeCurrency.name + '-' + client.chain.name,
-              };
+              // erc20 tokens
+              if (
+                topics[0].eventName === 'Transfer' &&
+                topics[0].args.value !== 0n &&
+                tokenAddresses.some(
+                  (token) =>
+                    token.address.toLowerCase() ===
+                    transaction.to.toLowerCase(),
+                ) &&
+                depositAddresses.includes(topics[0].args.to.toLowerCase())
+              ) {
+                const chain = tokenAddresses.find(
+                  (token) =>
+                    token.address.toLowerCase() ===
+                    transaction.to.toLowerCase(),
+                );
 
-              return await this.depositHistoryModel.create(history);
-            }
+                const history: TransferObject = {
+                  transactionHash: transaction.transactionHash,
+                  blockNumber: transaction.blockNumber,
+                  from: topics[0].args.from,
+                  to: topics[0].args.to,
+                  value: topics[0].args.value.toString(),
+                  tokenAddress: transaction.to,
+                  network: client.chain.name,
+                  chain: chain._id,
+                };
 
-            const topics = transaction.logs.map((log: any) => {
-              const decoded = decodeEventLog({
-                abi: erc20Abi,
-                data: log.data,
-                topics: log.topics,
-              });
-
-              return decoded as any;
-            });
-
-            // erc20 tokens
-            if (
-              topics[0].eventName === 'Transfer' &&
-              topics[0].args.value !== 0n &&
-              tokenAddresses.some(
-                (token) =>
-                  token.address.toLowerCase() === transaction.to.toLowerCase(),
-              ) &&
-              depositAddresses.includes(topics[0].args.to.toLowerCase())
-            ) {
-              const chain = tokenAddresses.find(
-                (token) =>
-                  token.address.toLowerCase() === transaction.to.toLowerCase(),
-              );
-
-              const history: TransferObject = {
-                transactionHash: transaction.transactionHash,
-                blockNumber: transaction.blockNumber,
-                from: topics[0].args.from,
-                to: topics[0].args.to,
-                value: topics[0].args.value.toString(),
-                tokenAddress: transaction.to,
-                network: client.chain.name,
-                chain: chain._id,
-              };
-
-              return await this.depositHistoryModel.create(history);
-            }
-          } catch (error) {}
-        });
-      },
-    });
-    // }
+                return await this.depositHistoryModel.create(history);
+              }
+            } catch (error) {}
+          });
+        },
+      });
+    }
   }
 
   // async coinListener(): Promise<void> {

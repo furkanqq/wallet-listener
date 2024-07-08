@@ -127,7 +127,7 @@ export class RedisService {
   }
 
   async addDepositAddressToRedis(
-    depositAddress: DepositAddress,
+    depositAddress: Pick<DepositAddress, '_id' | 'addr'>,
   ): Promise<boolean> {
     const client = this.connectRedis();
 
@@ -149,7 +149,9 @@ export class RedisService {
     return isOk;
   }
 
-  async getAllDepositAddressFromRedis(): Promise<DepositAddress[]> {
+  async getAllDepositAddressFromRedis(): Promise<
+    Pick<DepositAddress, '_id' | 'addr'>[]
+  > {
     const client = this.connectRedis();
 
     const depositAddressKeys = await client.sMembers('deposit_address');
